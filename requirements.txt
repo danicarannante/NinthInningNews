@@ -1,0 +1,7 @@
+streamlit
+pandas
+lxml
+numpy
+matplotlib
+base58
+pybaseball
