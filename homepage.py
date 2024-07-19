@@ -36,8 +36,7 @@ df = pd.read_csv(f'{selected_year}.csv')
 print(df) 
 if 'league_data' not in st.session_state or st.session_state['data'] is False:
     print('loading league data.....')
-    st.session_state['league_data'] =   pd.read_csv(f'{selected_year}.csv')
-    #get_league_data()
+    # st.session_state['league_data'] =   pd.read_csv(f'{selected_year}.csv')
+    st.session_state['league_data'] = get_league_data()
     st.session_state['data'] = True
     print('finished....')
-    st.write()
