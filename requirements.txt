@@ -5,3 +5,4 @@ numpy
 matplotlib
 base58
 pybaseball
+seaborn
