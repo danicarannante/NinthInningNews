@@ -1,5 +1,5 @@
 import streamlit as st
-from pybaseball import pitching_stats, playerid_lookup, statcast_pitcher,statcast, spraychart,plot_stadium
+from pybaseball import pitching_stats, playerid_lookup, statcast_pitcher,statcast, spraychart,plot_stadium, plot_strike_zone
 from variables import team_mapping, get_league_data, stadium_mapping,pitch_type_mapping
 import pandas as pd
 import datetime 
@@ -25,7 +25,7 @@ debut_date = int(player_lookup['mlb_played_first'].values[0])
 # ------------------------- Player Info Section ------------------------------------
 info = f"""
 <div style='background-color: LightBlue; border-radius: 5px; text-align: center; width: auto;'>
-    <h1 style='margin-bottom: 5px;'>{selected_player}</h1> 
+    <h1 font-size: 35px'>{selected_player}</h1> 
     <p style='margin-bottom: 5px; font-size: 18px;'>Age: {player_info["Age"].values[0]} | Debut: {debut_date} | Team : {selected_team}</p>
 </div>
 """
@@ -41,11 +41,18 @@ pid = player_lookup['key_mlbam'].values[0]
 data = statcast_pitcher(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid) # 1 year data for 2023, filter out foul balls,strikes, balls
 data = data[data['game_type'] == 'R']
 pitches_df = data.get(['player_name','release_speed','pitch_type'])
-st.dataframe(pitches_df,hide_index=True)
+# st.dataframe(pitches_df,hide_index=True)
 
-# ------------------------------------------------------------------------------ 
-# Create tables and charts for each pitch type
+# -------------------------------- strike zone ---------------------------------
 
+filtered_mapping = {v : k for k, v in pitch_type_mapping.items() if k in data['pitch_type'].dropna().unique()}
+pitch_types = data['pitch_type'].dropna().unique() 
+selected_pitch_type = st.selectbox("Select Pitch Type", list(filtered_mapping.keys()))
+filtered_data = data[data['pitch_type'] == filtered_mapping[selected_pitch_type]]
+fig = plot_strike_zone(filtered_data).get_figure()
+st.pyplot(fig)
+
+# ------------------------------------------------------------------------------
 subheader = f"""
 <div style='background-color: LightBlue; border-radius: 5px; text-align: center; width: auto;'>
     <p style='margin-bottom: 5px;'>Pitch Velocity Distribution</p> 
@@ -72,6 +79,7 @@ for pitch_type in pitch_types:
     ax.set_xlabel("Velocity (mph)")
     ax.set_ylabel("Density")
     median_velocity = pitch_type_data['release_speed'].median()
+   
     ax.set_title(f"{pitch_type_mapping[pitch_type]} {median_velocity:.0f}mph | {rate:.2f}%") # mph, Peak Density: {median_density:.2f}")
     st.pyplot(fig)
 

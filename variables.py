@@ -4,7 +4,8 @@ from pybaseball import statcast
 import streamlit as st
 import matplotlib.pyplot as plt
 
-team_mapping = {'Arizona Diamondbacks':'ARI', 
+team_mapping = {
+'Arizona Diamondbacks':'ARI', 
 'Atlanta Braves':'ATL',
 'Baltimore Orioles': 'BAL', 
 'Boston Red Sox': 'BOS', 
@@ -13,12 +14,12 @@ team_mapping = {'Arizona Diamondbacks':'ARI',
 'Cincinnati Reds': 'CIN', 
 'Cleveland Guardians': 'CLE',
 'Colorado Rockies' :'COL',
-'Detroit Tigers' : ' DET', 
+'Detroit Tigers' : 'DET', 
 'Houston Astros' : 'HOU', 
 'Kansas City Royals' : 'KCR',
-'Los Angeles Angels': 'ANA',
+'Los Angeles Angels': 'LAA',
 'Los Angeles Dodgers' : 'LAD', 
-'Miami Marlins': 'FLA',
+'Miami Marlins': 'MIA',
 'Milwaukee Brewers': 'MIL', 
 'Minnesota Twins': 'MIN', 
 'New York Mets': 'NYM', 
@@ -67,21 +68,21 @@ stadium_mapping = {'Arizona Diamondbacks':'diamondbacks',
 'Washington Nationals':'nationals',
 'Generic': 'generic'}
 
-pitch_type_mapping = {'CH': 'Changeup',
-
-'CU':'Curveball',
-'FC':'Cutter',
-'EP':'Eephus',
-'FO':'Forkball',
-'FF':'Four-Seam Fastball',
-'KN':'Knuckleball',
-'KC':'Knuckle-curve',
-'SC':'Screwball',
-'SI':'Sinker',
-'SL':'Slider',
-'SV':'Slurve',
-'FS':'Splitter',
-'ST':'Sweeper'
+pitch_type_mapping = {
+    'CH': 'Changeup',
+    'CU':'Curveball',
+    'FC':'Cutter',
+    'EP':'Eephus',
+    'FO':'Forkball',
+    'FF':'Four-Seam Fastball',
+    'KN':'Knuckleball',
+    'KC':'Knuckle-curve',
+    'SC':'Screwball',
+    'SI':'Sinker',
+    'SL':'Slider',
+    'SV':'Slurve',
+    'FS':'Splitter',
+    'ST':'Sweeper'
 }
 
 

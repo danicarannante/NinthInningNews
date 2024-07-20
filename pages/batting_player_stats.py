@@ -25,7 +25,7 @@ debut_date = int(player_lookup['mlb_played_first'].values[0])
 # ------------------------- Player Info Section ------------------------------------
 info = f"""
 <div style='background-color: LightBlue; border-radius: 5px; text-align: center; width: auto;'>
-    <h1 style='margin-bottom: 5px;'>{selected_player}</h1> 
+    <h1 font-size: 35px'>{selected_player}</h1> 
     <p style='margin-bottom: 5px; font-size: 18px;'>Age: {player_info["Age"].values[0]} | Debut: {debut_date} | Team : {selected_team}</p>
 </div>
 """
@@ -59,6 +59,7 @@ with col2:
 pid = player_lookup['key_mlbam'].values[0]
 data = statcast_batter(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid) # 1 year data for 2023, filter out foul balls,strikes, balls
 data = data[data['game_type'] == 'R']
+
 hits_df = data[data['events'].isin(['single','double','triple','home_run'])].get(['player_name','launch_angle','launch_speed','hit_location','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom'])
 hits_df['hit_classification'] = hits_df.apply(classify_hit, axis=1)
 hit_summary_df = create_summary_table(hits_df).set_index('batted ball type')
@@ -93,12 +94,4 @@ fig = spraychart(filtered_data, stadium_mapping[selected_team], size=50, title=f
 # st.title(f"Spraychart for {selected_hit_type}")
 st.pyplot(fig)
 
- # Create a seaborn scatter plot
-plt.figure(figsize=(10, 6))
-sns.scatterplot(data=filtered_data, x='hc_x', y='hc_y', hue='events', palette='deep', style='events', s=100)
-plt.title("Spray Chart of Hit Types")
-plt.xlabel("Horizontal Location")
-plt.ylabel("Vertical Location")
-plt.gca().invert_xaxis()
-st.pyplot(plt.gcf())
-
+# --------------------------------------------------------------
