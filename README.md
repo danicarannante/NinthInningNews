@@ -16,9 +16,11 @@ MLB Data Explorer is a web application designed to help users explore Major Leag
   - `streamlit`: For building the web app interface.
   - `pandas`: For data manipulation and analysis.
   - `requests`: For fetching data from the web.
-  - `matplotlib`: For creating bar graphs.
+  - `matplotlib`: For creating graphs.
+  - `seaborn`: For creating graphs.
   - `numpy`: For numerical operations.
   - `base64`: For encoding and decoding data.
+  - `pybaseball`: For loading baseball data.
 
 ## How to Run
 
