@@ -5,6 +5,9 @@ import pandas as pd
 import datetime 
 import matplotlib.pyplot as plt
 import seaborn as sns
+from pybaseball import cache
+
+cache.enable()
 # player stats page
 
 selected_team = st.sidebar.selectbox('Select a team:', st.session_state["teams"])

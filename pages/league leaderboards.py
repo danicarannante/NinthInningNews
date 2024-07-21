@@ -2,6 +2,9 @@ import streamlit as st
 from pybaseball import team_batting, team_pitching
 import pandas as pd
 from variables import team_mapping
+from pybaseball import cache
+
+cache.enable()
 # Year selection
 year = st.sidebar.slider('Select Year', min_value=2000, max_value=2024, value=2023)
 

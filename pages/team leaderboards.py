@@ -2,6 +2,9 @@ import streamlit as st
 from pybaseball import team_batting, team_pitching, standings, batting_stats, pitching_stats
 from variables import team_mapping
 import pandas as pd
+from pybaseball import cache
+
+cache.enable()
 
 
 selected_team = st.sidebar.selectbox('Select a team:', st.session_state["teams"])
