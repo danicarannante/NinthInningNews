@@ -17,8 +17,9 @@ bs = batting_stats(st.session_state['year'], end_season=st.session_state['year']
 filtered = bs[bs["Team" ] == abv]
 players = sorted([name for name in filtered['Name']])
 selected_player = st.sidebar.selectbox('Select a player:', players)
-player_info = filtered[filtered['Name'] == selected_player]
+player_info = filtered[filtered['Name'] == selected_player].get(['Age','G','AB','PA','H','1B','2B','3B','HR','R','RBI','BB','HBP','SF','SH','wOBA','xwOBA'])
 print(selected_player)
+print(player_info)
 
 player_lookup = playerid_lookup(selected_player.split(" ")[1],selected_player.split(" ")[0]) # contains id to use in baseball reference
 player_api_id = player_lookup['key_bbref'].values[0]
@@ -60,10 +61,10 @@ with col2:
 # ----------------------------------- Statcast Batter Table --------------------------
 #data = statcast_batter('2008-04-01','2024-11-01',player_id=pid) # grab all historic data
 pid = player_lookup['key_mlbam'].values[0]
-data = statcast_batter(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid) # 1 year data for 2023, filter out foul balls,strikes, balls
+data = statcast_batter(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid).get(['player_name','launch_angle','launch_speed','hit_location','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom','game_type','hc_x','hc_y']) # 1 year data for 2023, filter out foul balls,strikes, balls
 data = data[data['game_type'] == 'R']
 
-hits_df = data[data['events'].isin(['single','double','triple','home_run'])].get(['player_name','launch_angle','launch_speed','hit_location','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom'])
+hits_df = data[data['events'].isin(['single','double','triple','home_run'])] #.get(['player_name','launch_angle','launch_speed','hit_location','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom'])
 hits_df['hit_classification'] = hits_df.apply(classify_hit, axis=1)
 hit_summary_df = create_summary_table(hits_df).set_index('batted ball type')
 
@@ -87,14 +88,9 @@ if 'league_data' in st.session_state:
     st.sidebar.markdown(key, unsafe_allow_html=True)
 
 # ----------------------------- Hits spraychart ----------------------------- 
-# fig = spraychart(data, stadium_mapping[selected_team], size=50, title=f"{selected_player} for {st.session_state['year']}").get_figure()
-# st.pyplot(fig)
-
 hit_types = data['bb_type'].dropna().unique()  
 selected_hit_type = st.selectbox("Select Hit Type", hit_types)
 filtered_data = data[data['bb_type'] == selected_hit_type]
 fig = spraychart(filtered_data, stadium_mapping[selected_team], size=50, title=f"{selected_player} for {st.session_state['year']} ({selected_hit_type})").get_figure()
-# st.title(f"Spraychart for {selected_hit_type}")
 st.pyplot(fig)
-
 # --------------------------------------------------------------

@@ -6,3 +6,4 @@ matplotlib
 base58
 pybaseball
 seaborn
+plotly

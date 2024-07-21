@@ -1,5 +1,5 @@
 import streamlit as st
-from pybaseball import team_batting, team_pitching
+from pybaseball import team_batting, team_pitching, schedule_and_record
 import pandas as pd
 from variables import team_mapping
 from pybaseball import cache
@@ -15,6 +15,26 @@ info = f"""
 </div>
 """
 st.markdown(info, unsafe_allow_html=True)
+# ------------------------------------------------------------------
+# for t in team_mapping:
+#     print(t)
+#     df = schedule_and_record(st.session_state['year'],)
+#     df['W/L'] = df['W/L'].replace({'W-wo': 'W','L-lo': 'L'})
+#     # Count wins and losses
+#     team_stats = df.groupby('Team')['W/L'].value_counts().unstack(fill_value=0).reset_index()
+#     team_stats.columns = ['team', 'losses', 'wins']  # Rename columns for clarity
+#     # Display the processed data
+#     print(team_stats.head())
+#     team_stats_long = team_stats.melt(id_vars='Team', value_vars=['wins', 'losses'], 
+#                                     var_name='result_type', value_name='count')
+#     # Create the bar chart
+# fig = px.bar(team_stats_long, x='team', y='count', color='result_type', 
+#              labels={'count': 'Total Count', 'result_type': 'Result'},
+#              title='Total Wins and Losses for All Teams',
+#              barmode='group')
+# st.plotly_chart(fig)
+
+
 # ------------------------------------------------------------------
 batting_stats = team_batting(year)
 top_n = st.sidebar.slider('Select number of top teams to display', min_value=5, max_value=30, value=10)
