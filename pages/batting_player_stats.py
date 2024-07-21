@@ -69,7 +69,7 @@ hit_summary_df = create_summary_table(hits_df).set_index('batted ball type')
 
 if 'league_data' in st.session_state:
     league_data = st.session_state['league_data']
-    hits_league_data = league_data[league_data['events'].isin(['single','double','triple','home_run'])].get(['player_name','hit_location','launch_angle','launch_speed','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom'])
+    hits_league_data = league_data[league_data['events'].isin(['single','double','triple','home_run'])] # .get(['player_name','hit_location','launch_angle','launch_speed','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom'])
     hits_league_data['hit_classification'] = hits_league_data.apply(classify_hit, axis=1)
     league_summary_df = create_summary_table(hits_league_data).set_index('batted ball type')
     player_title= f"""
