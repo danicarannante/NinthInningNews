@@ -7,9 +7,16 @@ from pybaseball import cache
 cache.enable()
 
 st.set_page_config(
-    page_title="MLB Data Explorer"
+    page_title="Ninth Inning News"
 )
 
+NinthInningNews = f"""
+<div text-align: center; width: auto;display:flex;justify-content:center;'>
+    <h1 style='font:times new roman; font-size: 50px; font-weight: bold; text-align: center;
+    color: black;letter-spacing: 2px;'>Ninth Inning News </h1>
+</div>
+"""
+st.markdown(NinthInningNews, unsafe_allow_html=True)
 
 selected_year = st.sidebar.selectbox('Year', list(reversed(range(2019,2025))))
 current_standings = standings(selected_year)

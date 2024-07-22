@@ -62,6 +62,7 @@ with col2:
 pid = player_lookup['key_mlbam'].values[0]
 data = statcast_batter(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid).get(['player_name','p_throws','launch_angle','launch_speed','hit_location','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom','game_type','hc_x','hc_y']) # 1 year data for 2023, filter out foul balls,strikes, balls
 data = data[data['game_type'] == 'R']
+data['bb_type'] = data['bb_type'] .replace({'ground_ball': 'ground ball','line_drive': 'line drive','fly_ball':'fly ball'})
 
 hits_df = data[data['events'].isin(['single','double','triple','home_run'])] #.get(['player_name','launch_angle','launch_speed','hit_location','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom'])
 hits_df['hit_classification'] = hits_df.apply(classify_hit, axis=1)
@@ -71,6 +72,7 @@ hit_summary_df = create_summary_table(hits_df).set_index('batted ball type')
 if 'league_data' in st.session_state:
     league_data = st.session_state['league_data']
     hits_league_data = league_data[league_data['events'].isin(['single','double','triple','home_run'])] # .get(['player_name','hit_location','launch_angle','launch_speed','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom'])
+    hits_league_data['bb_type'] = hits_league_data['bb_type'] .replace({'ground_ball': 'ground ball','line_drive': 'line drive','fly_ball':'fly ball'})
     hits_league_data['hit_classification'] = hits_league_data.apply(classify_hit, axis=1)
     league_summary_df = create_summary_table(hits_league_data).set_index('batted ball type')
     player_title= f"""
@@ -102,6 +104,6 @@ pitcher_selection = col2.selectbox("Right Handed or Left Handed Pitcher", ['R','
 filtered_data = data[data['bb_type'] == selected_hit_type]
 filter_data = filtered_data[filtered_data['p_throws'] == pitcher_selection]
 print(filter_data)
-fig = spraychart(filtered_data, stadium_mapping[selected_team], size=50, title=f"{selected_player} for {st.session_state['year']} ({selected_hit_type})").get_figure()
+fig = spraychart(filtered_data, stadium_mapping[selected_team], size=50, title=f"{selected_hit_type} for {st.session_state['year']}").get_figure()
 st.pyplot(fig)
 # --------------------------------------------------------------
