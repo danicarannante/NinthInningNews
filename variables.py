@@ -161,6 +161,7 @@ def classify_hit(row):
                 location = 'opposite'
         return f"{location} {row['bb_type']}"
 
+@st.cache_data
 def get_league_data():
     stats = statcast(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31").get(['player_name','hit_location','launch_angle','launch_speed','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom'])
     return stats
