@@ -19,7 +19,6 @@ players = sorted([name for name in filtered['Name']])
 selected_player = st.sidebar.selectbox('Select a player:', players)
 player_info = filtered[filtered['Name'] == selected_player].get(['Age','G','AB','PA','H','1B','2B','3B','HR','R','RBI','BB','HBP','SF','SH','wOBA','xwOBA'])
 print(selected_player)
-print(player_info)
 
 player_lookup = playerid_lookup(selected_player.split(" ")[1],selected_player.split(" ")[0]) # contains id to use in baseball reference
 player_api_id = player_lookup['key_bbref'].values[0]
@@ -61,12 +60,13 @@ with col2:
 # ----------------------------------- Statcast Batter Table --------------------------
 #data = statcast_batter('2008-04-01','2024-11-01',player_id=pid) # grab all historic data
 pid = player_lookup['key_mlbam'].values[0]
-data = statcast_batter(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid).get(['player_name','launch_angle','launch_speed','hit_location','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom','game_type','hc_x','hc_y']) # 1 year data for 2023, filter out foul balls,strikes, balls
+data = statcast_batter(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid).get(['player_name','p_throws','launch_angle','launch_speed','hit_location','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom','game_type','hc_x','hc_y']) # 1 year data for 2023, filter out foul balls,strikes, balls
 data = data[data['game_type'] == 'R']
 
 hits_df = data[data['events'].isin(['single','double','triple','home_run'])] #.get(['player_name','launch_angle','launch_speed','hit_location','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom'])
 hits_df['hit_classification'] = hits_df.apply(classify_hit, axis=1)
 hit_summary_df = create_summary_table(hits_df).set_index('batted ball type')
+
 
 if 'league_data' in st.session_state:
     league_data = st.session_state['league_data']
@@ -80,17 +80,28 @@ if 'league_data' in st.session_state:
     """
     st.markdown(player_title, unsafe_allow_html=True)
     st.dataframe(get_comparison(hit_summary_df,league_summary_df),use_container_width=True)
-    key = f"""
-    <div style='background-color: LightBlue; margin-bottom:10px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
-        <p1 text-align: center; font-size: 20px'>Yellow: Within + or -.005 of league average value <br> Green: Greater than league average value <br> Pink: Less than league average value </p1>
-    </div>
-    """
-    st.sidebar.markdown(key, unsafe_allow_html=True)
+key = f"""
+<div style='background-color: LightBlue; margin-bottom:10px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
+    <p1 text-align: center; font-size: 20px'>Yellow: Within + or -.005 of league average value <br> Green: Greater than league average value <br> Pink: Less than league average value </p1>
+</div>
+"""
+st.sidebar.markdown(key, unsafe_allow_html=True)
 
 # ----------------------------- Hits spraychart ----------------------------- 
+spray_title = f"""
+<div style='background-color: LightBlue; border-radius: 5px; text-align: center; width: auto;'>
+    <h1 style='margin-bottom: 5px; font-size: 18px;'> Hit Type Outcomes for L vs R Handed Pitchers </h1>
+</div>
+"""
+st.markdown(spray_title, unsafe_allow_html=True)
+
+col1,col2 = st.columns(2)
 hit_types = data['bb_type'].dropna().unique()  
-selected_hit_type = st.selectbox("Select Hit Type", hit_types)
+selected_hit_type = col1.selectbox("Select Hit Type", hit_types)
+pitcher_selection = col2.selectbox("Right Handed or Left Handed Pitcher", ['R','L'])
 filtered_data = data[data['bb_type'] == selected_hit_type]
+filter_data = filtered_data[filtered_data['p_throws'] == pitcher_selection]
+print(filter_data)
 fig = spraychart(filtered_data, stadium_mapping[selected_team], size=50, title=f"{selected_player} for {st.session_state['year']} ({selected_hit_type})").get_figure()
 st.pyplot(fig)
 # --------------------------------------------------------------
