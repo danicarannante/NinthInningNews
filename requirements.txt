@@ -8,3 +8,4 @@ pybaseball
 seaborn
 plotly
 scikit-learn
+statsmodels

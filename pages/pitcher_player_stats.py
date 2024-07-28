@@ -10,7 +10,6 @@ from pybaseball import cache
 
 cache.enable()
 
-
 selected_team = st.sidebar.selectbox('Select a team:', st.session_state["teams"])
 abv = team_mapping[selected_team]
 
@@ -40,12 +39,10 @@ short_df = player_info.get(['W','L','G','GS','IP','WHIP','WAR','ERA','SV','FIP',
 st.dataframe(short_df,hide_index=True)
 
 # ----------------------------------- Statcast Pitcher Table --------------------------
-#data = statcast_batter('2008-04-01','2024-11-01',player_id=pid) # grab all historic data
 pid = player_lookup['key_mlbam'].values[0]
-data = statcast_pitcher(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid).get(['player_name','release_speed','events','pitch_type','game_type','plate_x','plate_z']) # 1 year data for 2023, filter out foul balls,strikes, balls
+data = statcast_pitcher(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid)#.get(['player_name','release_speed','events','pitch_type','game_type','plate_x','plate_z']) # 1 year data for 2023, filter out foul balls,strikes, balls
 data = data[data['game_type'] == 'R']
 pitches_df = data.get(['player_name','release_speed','pitch_type'])
-# st.dataframe(pitches_df,hide_index=True)
 
 # ----------------------- strike zone display and velocity distribution  --------------------------
 subheader = f"""
@@ -102,10 +99,8 @@ heatmap_header = f"""
 </div>
 """
 st.markdown(heatmap_header, unsafe_allow_html=True)
-
 pitch_outcomes = data[['plate_x', 'plate_z', 'events']].dropna(subset=['events'])
 
-# Categorize outcomes into broader categories if needed
 outcome_mapping = {
     'single': 'Hit',
     'double': 'Hit',
@@ -118,7 +113,6 @@ outcome_mapping = {
     'field_out': 'Out',
     'grounded_into_double_play': 'Out',
     'double_play': 'Out'
-    # Add more mappings as needed
 }
 
 pitch_outcomes['outcome_category'] = pitch_outcomes['events'].map(outcome_mapping)
@@ -131,19 +125,15 @@ bins_z = np.linspace(1.0, 4.0, 5)   # Adjust based on typical pitch locations
 pitch_outcomes['binned_plate_x'] = pd.cut(pitch_outcomes['plate_x'], bins=bins_x, labels=None )
 pitch_outcomes['binned_plate_z'] = pd.cut(pitch_outcomes['plate_z'], bins=bins_z, labels=None)
 
-# Sidebar outcome selection
+
 outcome_category = st.selectbox('Select Outcome Category', pitch_outcomes['outcome_category'].unique())
 
-# Filter data for the selected outcome
 filtered_data = pitch_outcomes[pitch_outcomes['outcome_category'] == outcome_category]
 outcome_freq = filtered_data.pivot_table(index='binned_plate_z', columns='binned_plate_x', values='events', aggfunc='count', fill_value=0)
 
-# Plot heatmap
 plt.figure(figsize=(8, 6))
 ax = sns.heatmap(outcome_freq, cmap="crest", cbar=True, annot=True, yticklabels=False, xticklabels=False)
 plt.title(f'{outcome_category} Frequency by Location')
 ax.set(xlabel="", ylabel="")
 
-
-# Display the heatmap
 st.pyplot(plt.gcf())

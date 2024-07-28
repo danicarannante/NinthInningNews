@@ -86,29 +86,6 @@ pitch_type_mapping = {
 }
 
 
-# based on 2023 values
-def wOBA(data):
-    PA = len(data[data['events'].notna()]) 
-    IBB = len(data[data['des'].str.contains('intentionally')])
-    uBB = len(data[data['events'] == 'walk']) + IBB
-    SF = len(data[data['events'] == 'sac_fly'])
-    HBP = len(data[data['events'] == 'hit_by_pitch'])
-    single = len(data[data['events'] == 'single'])
-    double = len(data[data['events'] == 'double'])
-    triple = len(data[data['events'] == 'triple'])
-    HR = len(data[data['events'] == 'home_run'])
-    SB =  len(data[data['events'] == 'sac_bunt'])
-
-    AB = PA - (uBB  + IBB + SF + HBP + SB)
-
-
-    w = ((.696*uBB) + (.726* HBP) + (.883*single) + (1.244*double) + (1.569*triple) + (2.004*HR)) /(AB + uBB - IBB + SF + HBP) 
-    #w = ((.69*uBB) + (.72* HBP) + (.89*single) + (1.27*double) + (1.62*triple) + (2.10*HR)) / (AB + uBB - IBB + SF + HBP) 
-    #w = ((.689*uBB) + (.720* HBP) + (.884*single) + (1.261*double) + (1.601*triple) + (2.072*HR)) /(AB+uBB+SF+HBP) 
-    return w
-
-# https://www.fangraphs.com/guts.aspx?type=cn
-
 def create_summary_table(data):
     # Calculate total number of hits for rate calculation
     total_hits = len(data)

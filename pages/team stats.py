@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly 
 import plotly.graph_objs as go
+import plotly.express as px
 
 cache.enable()
 selected_team = st.sidebar.selectbox('Select a team:', st.session_state["teams"])
@@ -56,26 +57,30 @@ ax.tick_params(left=False, bottom=False)
 st.pyplot(plt.gcf())
 
 # ---------------------- leaderboards ------------------------
-top_n = st.sidebar.slider('Select number of top players to display', min_value=5, max_value=10, value=10)
-batting_stats_mappings = [{'name':'Batting Average','abv':'AVG'},{'name':'Home Runs','abv':'HR'},{'name':"RBIs",'abv':'RBI'},{'name':'On-Base Percentage', 'abv':'OBP'},{'name':'Slugging Percentage', 'abv':'SLG'},{'name':'OPS', 'abv':'OPS'}]
-for bs in batting_stats_mappings:
-    title = f"""
-    <div style='background-color: LightBlue; margin-bottom:5px; padding: 5px; border-radius: 5px; text-align: center; width: auto;'>
-        <p1 text-align: center; font-size: 50px'>Top Players by {bs['name']}</p1>
-    </div>
-    """
-    st.markdown(title, unsafe_allow_html=True)
-    top_val = team_batting.sort_values(by=bs['abv'], ascending=False).head(top_n).reindex()
-    top_val.reset_index(drop=True, inplace=True)
-    top_val.index = top_val.index 
-    top_val.insert(0, 'Rank', top_val.index)
+subheader = f"""
+<div style='background-color: LightBlue; border-radius: 5px; text-align: center; width: auto;'>
+    <p style='margin-bottom: 0px;'>Top Player Statistics by Batting Metrics</p> 
+</div>
+"""
+st.markdown(subheader, unsafe_allow_html=True)
 
-    # Display the ranking
-    half = len(top_val) // 2
-    col1, col2 = st.columns(2)
-    with col1:
-        left_rankings = '\n'.join([f"{i+1}. {row['Name']} {row[bs['abv']]}" for i, row in top_val.iloc[:half].iterrows()])
-        st.markdown(left_rankings)
-    with col2:
-        right_rankings = '\n'.join([f"{i+1}. {row['Name']} {row[bs['abv']]}" for i, row in top_val.iloc[half:].iterrows()])
-        st.markdown(right_rankings)
+top_n = st.sidebar.slider('Select number of top players to display', min_value=5, max_value=10, value=10)
+batting_stats_mappings = [{'name':'Batting Average','abv':'AVG','col':'1'},{'name':'Home Runs','abv':'HR','col':'1'},{'name':"RBIs",'abv':'RBI','col':'1'},
+{'name':'On-Base Percentage', 'abv':'OBP','col':'2'},{'name':'Slugging Percentage', 'abv':'SLG','col':'2'},{'name':'OPS', 'abv':'OPS','col':'2'}]
+col1,col2 = st.columns(2)
+for bs in batting_stats_mappings:
+    top_val = team_batting.sort_values(by=bs['abv'], ascending=True).head(top_n)
+    fig = px.bar(
+        top_val,
+        x=bs['abv'],
+        y='Name',
+        orientation='h',
+        title=bs['name'],
+        labels={bs['abv']: bs['name'], 'Name': 'Player'},
+        text=bs['abv']
+    )
+
+    if bs['col'] == '1':
+        col1.plotly_chart(fig,use_container_width=True)
+    else:
+        col2.plotly_chart(fig,use_container_width=True)

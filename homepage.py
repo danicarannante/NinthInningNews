@@ -4,10 +4,6 @@ from pybaseball import standings,statcast
 from variables import get_league_data
 from pybaseball import cache
 
-# st.set_page_config(
-#     page_title="Ninth Inning News"
-# )
-
 NinthInningNews = f"""
 <div text-align: center; width: auto;display:flex;justify-content:center;'>
     <h1 style='font:times new roman; font-size: 50px; font-weight: bold; text-align: center;

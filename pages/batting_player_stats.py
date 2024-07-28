@@ -1,14 +1,12 @@
 import streamlit as st
 from pybaseball import batting_stats,playerid_lookup, statcast_batter,statcast, spraychart,plot_stadium
-from variables import team_mapping, wOBA, create_summary_table, classify_hit, get_league_data, stadium_mapping, get_comparison
+from variables import team_mapping,create_summary_table, classify_hit, get_league_data, stadium_mapping, get_comparison
 import pandas as pd
 import datetime 
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pybaseball import cache
-
 cache.enable()
-# player stats page
 
 selected_team = st.sidebar.selectbox('Select a team:', st.session_state["teams"])
 abv = team_mapping[selected_team]
@@ -103,7 +101,7 @@ selected_hit_type = col1.selectbox("Select Hit Type", hit_types)
 pitcher_selection = col2.selectbox("Right Handed or Left Handed Pitcher", ['R','L'])
 filtered_data = data[data['bb_type'] == selected_hit_type]
 filter_data = filtered_data[filtered_data['p_throws'] == pitcher_selection]
-print(filter_data)
 fig = spraychart(filtered_data, stadium_mapping[selected_team], size=50, title=f"{selected_hit_type} for {st.session_state['year']}").get_figure()
 st.pyplot(fig)
+
 # --------------------------------------------------------------
