@@ -15,10 +15,11 @@ year = st.sidebar.slider('Select Year', min_value=2000, max_value=2024, value=20
 # -------------------------  Info Section ------------------------------------
 info = f"""
 <div style='background-color: LightBlue; margin-bottom:5px;border-radius: 5px; text-align: center; width: auto;'>
-    <h1 font-size: 35px;>Prediction Models</h1> 
+    <h1 font-size: 35px;>Pitcher Prediction Model</h1> 
 </div>
 """
 st.markdown(info, unsafe_allow_html=True)
+
 
 # ------------------------- pitcher outs predictions --------------------------------
 # text = ''' This model predicts strikeouts for pitchers using data from the last five MLB seasons, sourced from the pybaseball library. It incorporates various pitching 
