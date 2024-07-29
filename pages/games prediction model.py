@@ -5,7 +5,7 @@ from datetime import timedelta
 import re
 import streamlit as st
 from variables import img_mapping
-
+cache.enable()
 
 team_name_mapping = {
     "ARI": "Arizona Diamondbacks",
