@@ -97,8 +97,7 @@ team_batting_stats_dict = team_batting_stats.set_index('Team').T.to_dict()
 
 # Get today's date in YYYY-MM-DD format
 #today = datetime.datetime.today().strftime('%Y-%m-%d')
-today = '2024-07-28'
-print(today)
+
 # MLB GameDay API URL for the schedule
 url = f'https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=probablePitcher(note)&date={selected_date}'
 response = requests.get(url)
@@ -108,7 +107,6 @@ matchups = []
 for date in data['dates']:
     for game in date['games']:
         matchup = {}
-        matchup['date'] = today
         matchup['home_team'] = game['teams']['home']['team']['name']
         matchup['away_team'] = game['teams']['away']['team']['name']
 
@@ -234,15 +232,15 @@ def create_game_card(results):
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div style="flex: 1;text-align: center;">
                         <img src="{get_team_logo_url(p['home_team'])}" width="50" alt="{p['home_team']} logo">
-                        <p style="font-size: 18px; margin:0;">Pitcher: {results['home_pitcher']}</p>
+                        <p style="font-size: 12px; margin:0;">Pitcher: {results['home_pitcher']}</p>
                     </div>
                     <div style="flex: 1; text-align: center;">
-                        <p style="font-size: 18px;">Predicted Winner:<br>{results['predicted_winner']}</p>
-                        <p style="font-size: 18px;">Confidence: {float(results['confidence']):.2f}</p>
+                        <p style="font-size: 16px;">Predicted Winner:<br>{results['predicted_winner']}</p>
+                        <p style="font-size: 16px;">Confidence: {float(results['confidence']):.2f}</p>
                     </div>
                     <div style="flex: 1; text-align: right;">
                         <img src="{get_team_logo_url(p['away_team'])}" width="50" alt="{p['away_team']} logo">
-                        <p style="font-size: 18px;margin:0;">Pitcher: {results['away_pitcher']}</p>
+                        <p style="font-size: 12px;margin:0;">Pitcher: {results['away_pitcher']}</p>
                     </div>
                 </div>
             </div>
