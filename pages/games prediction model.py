@@ -224,7 +224,7 @@ def create_game_card(results):
         if results['predicted_winner'] == results['winner']:
             bg = 'LightGreen'
         elif results['predicted_winner'] != results['winner']:
-            bg = 'Red'
+            bg = '#FF8181'
 
         st.markdown(
             f"""

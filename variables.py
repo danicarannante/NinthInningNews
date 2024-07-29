@@ -59,7 +59,7 @@ img_mapping   = {
 'Oakland Athletics': 'OAK',
 'Philadelphia Phillies' :'PHI',
 'Pittsburgh Pirates': 'PIT',
-'San Diego Padres': 'SDP',
+'San Diego Padres': 'SD',
 'San Francisco Giants':'SF',
 'Seattle Mariners': 'SEA',
 'St. Louis Cardinals': 'STL', 
