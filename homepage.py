@@ -4,11 +4,22 @@ from pybaseball import standings,statcast
 from variables import get_league_data
 from pybaseball import cache
 
-NinthInningNews = f"""
-<div text-align: center; width: auto;display:flex;justify-content:center;'>
-    <h1 style='font:times new roman; font-size: 50px; font-weight: bold; text-align: center;
-    color: black;letter-spacing: 2px;'>Ninth Inning News </h1>
-</div>
+NinthInningNews = ftitle_html = """
+    <style>
+        .newspaper-heading {
+            font-family: 'Georgia', serif; /* Choose a serif font for a newspaper feel */
+            font-size: calc(2vw + 2rem); /* Responsive font size */
+            font-weight: bold;
+            color: #333; /* Dark color for the title */
+            text-align: center;
+            margin: 20px 0; /* Vertical spacing */
+            padding: 0 10px; /* Horizontal padding for smaller screens */
+            box-sizing: border-box; /* Ensure padding doesn't affect width */
+        }
+    </style>
+    <div class="newspaper-heading">
+        Ninth Inning News
+    </div>
 """
 st.markdown(NinthInningNews, unsafe_allow_html=True)
 
