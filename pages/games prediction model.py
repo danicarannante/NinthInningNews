@@ -5,6 +5,7 @@ from datetime import timedelta
 import re
 import streamlit as st
 from variables import img_mapping
+from pybaseball import cache
 cache.enable()
 
 team_name_mapping = {
