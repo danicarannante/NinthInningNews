@@ -31,7 +31,7 @@ team_mapping = {
 'San Francisco Giants':'SFG',
 'Seattle Mariners': 'SEA',
 'St. Louis Cardinals': 'STL', 
-'Tampa Bay Rays': 'TBR', 
+'Tampa Bay Rays': 'TB', 
 'Texas Rangers': 'TEX', 
 'Toronto Blue Jays': 'TOR',
 'Washington Nationals':'WSN'}
@@ -63,7 +63,7 @@ img_mapping   = {
 'San Francisco Giants':'SF',
 'Seattle Mariners': 'SEA',
 'St. Louis Cardinals': 'STL', 
-'Tampa Bay Rays': 'TBR', 
+'Tampa Bay Rays': 'TB', 
 'Texas Rangers': 'TEX', 
 'Toronto Blue Jays': 'TOR',
 'Washington Nationals':'WSH'}
