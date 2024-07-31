@@ -4,7 +4,7 @@ from pybaseball import standings,statcast
 from variables import get_league_data
 from pybaseball import cache
 
-NinthInningNews = ftitle_html = """
+NinthInningNews = """
     <style>
         .newspaper-heading {
             font-family: 'Georgia', serif; /* Choose a serif font for a newspaper feel */
@@ -29,7 +29,7 @@ st.session_state['year'] = selected_year
 st.session_state['data'] = False
 
 title = f"""
-<div style='background-color: LightBlue; border-radius: 1px; text-align: center; width: auto;'>
+<div style='background-color: LightBlue; border-radius: 5px; text-align: center; width: auto;'>
     <h1 style='margin-bottom: 5px; font-size: 18px;'>League Standings for {selected_year} </h1>
 </div>
 """

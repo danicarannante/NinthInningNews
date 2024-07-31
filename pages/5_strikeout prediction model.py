@@ -15,21 +15,13 @@ year = st.sidebar.slider('Select Year', min_value=2000, max_value=2024, value=20
 # -------------------------  Info Section ------------------------------------
 info = f"""
 <div style='background-color: LightBlue; margin-bottom:5px;border-radius: 5px; text-align: center; width: auto;'>
-    <h1 font-size: 35px;>Pitcher Prediction Model</h1> 
+    <h1 style='font-size: 30px;'>Pitcher Prediction Model</h1> 
 </div>
 """
 st.markdown(info, unsafe_allow_html=True)
 
 
 # ------------------------- pitcher outs predictions --------------------------------
-# text = ''' This model predicts strikeouts for pitchers using data from the last five MLB seasons, sourced from the pybaseball library. It incorporates various pitching 
-# # statistics such as innings pitched, walks, home runs, earned run average (ERA), WHIP (Walks plus Hits per Inning Pitched), Fielding Independent Pitching (FIP),
-# # mistakes per appearance, and approximate batters faced per game. Utilizing LASSO regression with cross-validation, the model identifies
-# # which features are most predictive of strikeouts and assesses their impact on the predictions. The results are visualized in a scatter plot 
-# # comparing predicted versus actual strikeouts, with a trendline illustrating the relationship between these values. Hover tooltips provide
-# # additional context by displaying key metrics like ERA, WHIP, and mistakes per appearance. The accuracy of the model is demonstrated by how closely the 
-# # predicted strikeouts align with the actual values, offering insights into the effectiveness of various pitching metrics for forecasting performance.'''
-
 text = ''' This model predicts strikeouts for pitchers using data from the last three MLB seasons, sourced from the pybaseball library. It incorporates various pitching 
 statistics such as innings pitched, walks, home runs, earned run average (ERA), WHIP (Walks plus Hits per Inning Pitched), Fielding Independent Pitching (FIP),
 mistakes per appearance, and approximate batters faced per game.Utilizing LASSO regression with cross-validation, the model identifies
@@ -38,10 +30,10 @@ mistakes per appearance, and approximate batters faced per game.Utilizing LASSO 
 # additional context by displaying key metrics like ERA, WHIP, and mistakes per appearance. The accuracy of the model is demonstrated by how closely the 
 # predicted strikeouts align with the actual values, offering insights into the effectiveness of various pitching metrics for forecasting performance.'''
 prediction_descrip = f"""
-<div style=margin-bottom:5px; text-align: center; width: auto;'>
-    <p font-size: 1px;>{text}</p> 
-</div>
-"""
+    <div style=margin-bottom:5px; text-align: center; width: auto;'>
+        <p style='font-size: 14px;font-style: italic;'>{text}</p> 
+    </div>
+    """
 st.markdown(prediction_descrip, unsafe_allow_html=True)
 
 data = pd.concat([pitching_stats(year) for year in range(year - 3, year)])

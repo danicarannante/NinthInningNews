@@ -17,7 +17,7 @@ year = st.session_state['year']
 # ------------------------- Team Info Section ------------------------------------
 info = f"""
 <div style='background-color: LightBlue; border-radius: 5px; text-align: center; width: auto;'>
-    <h1 style='margin-bottom:10px; font-size: 35px'>{selected_team}</h1> 
+    <h1 style='margin-bottom:10px; font-size: 30px'>{selected_team}</h1> 
 </div>
 """
 st.markdown(info, unsafe_allow_html=True)
@@ -58,10 +58,10 @@ st.pyplot(plt.gcf())
 
 # ---------------------- leaderboards ------------------------
 subheader = f"""
-<div style='background-color: LightBlue; border-radius: 5px; text-align: center; width: auto;'>
-    <p style='margin-bottom: 0px;'>Top Player Statistics by Batting Metrics</p> 
-</div>
-"""
+    <div margin-bottom:10px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
+        <h1 style='margin-bottom: 5px; text-align: center; font-size: 20px'>Top Player Statistics by Batting Metrics</h1>
+    </div>
+    """
 st.markdown(subheader, unsafe_allow_html=True)
 
 top_n = st.sidebar.slider('Select number of top players to display', min_value=5, max_value=10, value=10)

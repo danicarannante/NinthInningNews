@@ -42,8 +42,8 @@ team_name_mapping = {
 }
 
 info = f"""
-<div style='background-color: LightBlue; margin-bottom:5px;border-radius: 5px; text-align: center; width: auto;'>
-    <h1 font-size: 35px;>Game Outcome Predictions</h1> 
+<div style='background-color: LightBlue; margin-bottom:5px; border-radius: 5px; text-align: center; width: auto;'>
+    <h1 style='font-size: 30px;'>Game Outcome Predictions</h1> 
 </div>
 """
 st.markdown(info, unsafe_allow_html=True)
@@ -55,7 +55,7 @@ The red box represents a wrong prediction while the green box represents a corre
 
 prediction_descrip = f"""
 <div style=margin-bottom:5px; text-align: center; width: auto;'>
-    <p font-size: 1px;>{text}</p> 
+    <p style='font-size: 14px;font-style: italic;'>{text}</p> 
 </div>
 """
 st.markdown(prediction_descrip, unsafe_allow_html=True)
