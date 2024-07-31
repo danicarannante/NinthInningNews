@@ -17,7 +17,7 @@ players = sorted([name for name in filtered['Name']])
 selected_player = st.sidebar.selectbox('Select a player:', players)
 player_info = filtered[filtered['Name'] == selected_player].get(['Age','G','AB','PA','H','1B','2B','3B','HR','R','RBI','BB','HBP','SF','SH','wRC+','wOBA',])
 print(selected_player)
-player_lookup = playerid_lookup(selected_player.split(" ")[1],selected_player.split(" ")[0]) # contains id to use in baseball reference
+player_lookup = playerid_lookup(selected_player.split(" ")[1],selected_player.split(" ")[0],fuzzy=True) # contains id to use in baseball reference
 player_api_id = player_lookup['key_mlbam'].values[0]
 player_fangraphs_id = player_lookup['key_fangraphs'].values[0]
 img_url = f"https://securea.mlb.com/mlb/images/players/head_shot/{player_api_id}.jpg"
