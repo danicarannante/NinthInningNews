@@ -3,6 +3,7 @@ import pandas as pd
 from pybaseball import standings,statcast
 from variables import get_league_data
 from pybaseball import cache
+cache.enable()
 
 NinthInningNews = """
     <style>
@@ -44,6 +45,7 @@ for league in current_standings[3:]:
 teams = sorted(set(team for table in current_standings for team in table['Tm']))
 st.session_state['teams'] = teams
 
+cache.enable()
 if 'league_data' not in st.session_state or st.session_state['data'] is False:
     with st.sidebar.status('Loading Data...'):
         print(f"loading league data for {st.session_state['year']}")
