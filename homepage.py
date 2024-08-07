@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
-from pybaseball import standings,statcast
-from variables import get_league_data
+from pybaseball import standings,statcast, schedule_and_record
+from variables import get_league_data, team_mapping
 from pybaseball import cache
 cache.enable()
 
@@ -26,6 +26,10 @@ st.markdown(NinthInningNews, unsafe_allow_html=True)
 
 selected_year = st.sidebar.selectbox('Year', list(reversed(range(2019,2025))))
 current_standings = standings(selected_year)
+for league in current_standings:
+    league.rename(columns={'Tm': 'Team'}, inplace=True)
+    league.drop(columns=['E#'], inplace=True)
+
 st.session_state['year'] = selected_year
 st.session_state['data'] = False
 
@@ -42,8 +46,12 @@ for league in current_standings[:3]:
 for league in current_standings[3:]:
     col2.write(league)
 
-teams = sorted(set(team for table in current_standings for team in table['Tm']))
+teams = sorted(set(team for table in current_standings for team in table['Team']))
 st.session_state['teams'] = teams
+
+
+
+
 
 cache.enable()
 if 'league_data' not in st.session_state or st.session_state['data'] is False:

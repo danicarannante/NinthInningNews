@@ -27,7 +27,7 @@ team_batting = bs[bs["Team" ] == abv]
 
 # ------------------------ win/loss graph -----------------------------
 results = schedule_and_record(st.session_state['year'],team_mapping[selected_team]).get(['Date','Tm','W/L']).dropna()
-results['W/L'] = results['W/L'].replace({'W-wo': 'W','L-lo': 'L'})
+results['W/L'] = results['W/L'].replace({'W-wo': 'W','L-lo': 'L','L-wo':'L'})
 
 # Transform data
 results['win'] = results['W/L'].apply(lambda x: 1 if x == 'W' else 0)
@@ -44,32 +44,71 @@ fig.update_layout(title=f'Wins and Losses for {st.session_state["year"]}',
 
 st.plotly_chart(fig)
 
-# ---------------------- heatmap ------------------------------
-batting_heatmap = team_batting.get(['Name','AVG', 'OBP','wOBA','SLG','OPS','BABIP']).dropna()
-pivot_table = batting_heatmap.pivot_table(index='Name', values=batting_heatmap.columns)
-# Create heatmap for the selected metric
-plt.figure(figsize=(12, 10))
-ax = sns.heatmap(pivot_table, cmap="crest", annot=True, fmt=".3f", cbar=True)
-ax.set_title(f'Heatmap for Players')
-ax.set_xlabel('')
-ax.set_ylabel('')
-ax.tick_params(left=False, bottom=False)
-st.pyplot(plt.gcf())
+# ---------------------- player stats table ------------------------------
+dataframe_header = f"""
+    <div margin-bottom:10px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
+    <h1 style='margin-bottom: 5px; text-align: center; font-size: 20px'>Batting Metrics for Current Players</h1>
+    </div>
+    """
+st.markdown(dataframe_header, unsafe_allow_html=True)
+
+batting_df = team_batting.get(['Name','AVG', 'OBP','wOBA','SLG','OPS','BABIP'])
+st.dataframe(batting_df,hide_index=True, height=(37 * batting_df.shape[0]),use_container_width=True)
+
+
+
+#     ## On-Base Percentage (OBP)
+#     **Description:** Represents the frequency a player reaches base via hits, walks, or hit by pitches divided by total plate appearances.  
+#     **League Average:** 0.320  
+#     **High vs. Low:** Higher values are better; a higher OBP means a player gets on base more often, which is advantageous for scoring runs.  
+    
+#     ---
+    
+#     ## Weighted On-Base Average (wOBA)
+#     **Description:** Provides a more comprehensive measure of a player's offensive contributions by weighing different types of hits and plate appearances more accurately.  
+#     **League Average:** 0.320  
+#     **High vs. Low:** Higher values are better; a higher wOBA reflects more effective offensive performance, including power and contact skills.  
+    
+#     ---
+    
+#     ## Slugging Percentage (SLG)
+#     **Description:** Measures a player's power by dividing total bases by the number of at-bats. It accounts for extra-base hits.  
+#     **League Average:** 0.410  
+#     **High vs. Low:** Higher values are better; a higher SLG indicates more power and greater ability to hit for extra bases.  
+    
+#     ---
+    
+#     ## On-Base Plus Slugging (OPS)
+#     **Description:** Combines OBP and SLG to provide an overall measure of a player's offensive ability.  
+#     **League Average:** 0.730  
+#     **High vs. Low:** Higher values are better; a higher OPS indicates overall offensive effectiveness, combining both getting on base and hitting for power.  
+    
+#     ---
+    
+#     ## Batting Average on Balls In Play (BABIP)
+#     **Description:** Measures how often a ball put into play by a batter falls for a hit, excluding home runs and strikeouts.  
+#     **League Average:** 0.300  
+#     **High vs. Low:** Higher values generally indicate better luck or skill with hitting balls in play. However, extreme values can suggest luck or poor defense.
+#     """)
+
 
 # ---------------------- leaderboards ------------------------
 subheader = f"""
     <div margin-bottom:10px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
-        <h1 style='margin-bottom: 5px; text-align: center; font-size: 20px'>Top Player Statistics by Batting Metrics</h1>
+        <h1 style='margin-bottom: 5px; text-align: center; font-size: 20px'>Top Players by Batting Metrics</h1>
     </div>
     """
 st.markdown(subheader, unsafe_allow_html=True)
 
-top_n = st.sidebar.slider('Select number of top players to display', min_value=5, max_value=10, value=10)
+
 batting_stats_mappings = [{'name':'Batting Average','abv':'AVG','col':'1'},{'name':'Home Runs','abv':'HR','col':'1'},{'name':"RBIs",'abv':'RBI','col':'1'},
 {'name':'On-Base Percentage', 'abv':'OBP','col':'2'},{'name':'Slugging Percentage', 'abv':'SLG','col':'2'},{'name':'OPS', 'abv':'OPS','col':'2'}]
 col1,col2 = st.columns(2)
+
+bs = batting_stats(st.session_state['year'], end_season=st.session_state['year'], league='all', qual=1, ind=1)
+team_batting = bs[bs["Team" ] == abv]
 for bs in batting_stats_mappings:
-    top_val = team_batting.sort_values(by=bs['abv'], ascending=True).head(top_n)
+    top_val = team_batting.sort_values(by=bs['abv'], ascending=True).head(5)
     fig = px.bar(
         top_val,
         x=bs['abv'],
@@ -84,3 +123,21 @@ for bs in batting_stats_mappings:
         col1.plotly_chart(fig,use_container_width=True)
     else:
         col2.plotly_chart(fig,use_container_width=True)
+
+# --------------------------- trending -------------------------
+# for league in current_standings:
+#     league.rename(columns={'Tm': 'Team'}, inplace=True)
+#     league.drop(columns=['E#'], inplace=True)
+
+#     for tm in league['Team'].tolist():      
+#         results = schedule_and_record(st.session_state['year'], team_mapping[tm]).get(['Date','Tm','W/L']).dropna()
+#         results['W/L'] = results['W/L'].replace({'W-wo': 'W','L-lo': 'L','L-wo':'L'})
+#         results = results.sort_index(ascending=False).head(10)
+#         results['win'] = results['W/L'].apply(lambda x: 1 if x == 'W' else 0)
+#         results['loss'] = results['W/L'].apply(lambda x: 1 if x == 'L' else 0)
+#         if results['win'].sum() >= 9:
+#             league['trend'] = '⬆️'
+#         elif results['loss'].sum() >= 9:
+#             league['trend'] = '⬇️'
+#         else:
+#             league['trend'] = '➡️'

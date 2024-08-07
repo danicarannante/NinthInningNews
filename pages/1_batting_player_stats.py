@@ -1,11 +1,15 @@
 import streamlit as st
-from pybaseball import batting_stats,playerid_lookup, statcast_batter,statcast, spraychart,plot_stadium
+from pybaseball import batting_stats,playerid_lookup, statcast_batter,statcast, spraychart,plot_stadium, playerid_reverse_lookup
 from variables import team_mapping,create_summary_table, classify_hit, get_league_data, stadium_mapping, get_comparison
 import pandas as pd
 import datetime 
 import matplotlib.pyplot as plt
+import plotly.graph_objs as go
 import seaborn as sns
 from pybaseball import cache
+import numpy as np
+
+
 cache.enable()
 
 selected_team = st.sidebar.selectbox('Select a team:', st.session_state["teams"])
@@ -49,7 +53,7 @@ season_wOBA = f"""
 """
 season_xwOBA = f"""
 <div style='background-color: LightBlue; margin-bottom:5px; padding: 1px; border-radius: 5px; text-align: center;'>
-    <h1 style='margin-bottom: 1px; font-size: 34px'>{player_info['wOBA'].values[0]}</h1>
+    <h1 style='margin-bottom: 1px; font-size: 34px;'>{player_info['wOBA'].values[0]}</h1>
     <p style='margin-bottom: 1px; font-size: 18px;'>{st.session_state['year']} wOBA for {selected_player}</p>
 </div>
 """
@@ -61,7 +65,7 @@ with col2:
 # ----------------------------------- Statcast Batter Table --------------------------
 #data = statcast_batter('2008-04-01','2024-11-01',player_id=pid) # grab all historic data
 pid = player_lookup['key_mlbam'].values[0]
-data = statcast_batter(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid).get(['player_name','p_throws','launch_angle','launch_speed','hit_location','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom','game_type','hc_x','hc_y']) # 1 year data for 2023, filter out foul balls,strikes, balls
+data = statcast_batter(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid)#.get(['player_name','p_throws','launch_angle','launch_speed','hit_location','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom','game_type','hc_x','hc_y']) # 1 year data for 2023, filter out foul balls,strikes, balls
 data = data[data['game_type'] == 'R']
 data['bb_type'] = data['bb_type'] .replace({'ground_ball': 'ground ball','line_drive': 'line drive','fly_ball':'fly ball'})
 
@@ -100,7 +104,6 @@ spray_title = f"""
 """
 st.markdown(spray_title, unsafe_allow_html=True)
 
-col1,col2 = st.columns(2)
 hit_types = data['bb_type'].dropna().unique()  
 selected_hit_type = col1.selectbox("Select Hit Type", hit_types)
 pitcher_selection = col2.selectbox("Right Handed or Left Handed Pitcher", ['R','L'])

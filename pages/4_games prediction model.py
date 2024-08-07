@@ -247,7 +247,5 @@ def create_game_card(results):
             """, 
             unsafe_allow_html=True
         )
-
-game_time = "July 29, 2024 - 7:00 PM ET"
 for p in predictions:
     create_game_card(p)
