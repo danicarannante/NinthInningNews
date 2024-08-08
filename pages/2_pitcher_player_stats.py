@@ -1,10 +1,10 @@
 import streamlit as st
-from pybaseball import pitching_stats, playerid_lookup, statcast_pitcher,statcast, spraychart,plot_stadium, plot_strike_zone
+from pybaseball import pitching_stats, playerid_lookup, statcast_pitcher, statcast, spraychart,plot_stadium, plot_strike_zone
 from variables import team_mapping, get_league_data, stadium_mapping,pitch_type_mapping
 import pandas as pd
 import datetime 
 import matplotlib.pyplot as plt
-import seaborn as sns
+import plotly.express as px
 import numpy as np
 from pybaseball import cache
 
@@ -99,47 +99,49 @@ col1.pyplot(fig)
 print("you got this")
 
 # ------------------------- heatmap --------------------
-heatmap_header = f"""
-    <div margin-top:5px;margin-bottom:5px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
-        <h1 style='text-align: center; font-size: 20px'>Pitch Outcomes by Location</h1>
-    </div>
-    """
-st.markdown(heatmap_header, unsafe_allow_html=True)
-pitch_outcomes = data[['plate_x', 'plate_z', 'events']].dropna(subset=['events'])
+# heatmap_header = f"""
+#     <div margin-top:5px;margin-bottom:5px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
+#         <h1 style='text-align: center; font-size: 20px'>Pitch Outcomes by Location</h1>
+#     </div>
+#     """
+# st.markdown(heatmap_header, unsafe_allow_html=True)
+# pitch_outcomes = data[['plate_x', 'plate_z', 'events']].dropna(subset=['events'])
 
-outcome_mapping = {
-    'single': 'Hit',
-    'double': 'Hit',
-    'triple': 'Hit',
-    'home_run': 'Homerun',
-    'strikeout': 'Strikeout',
-    'walk': 'Walk',
-    'hit_by_pitch': 'HBP',
-    'force_out': 'Out',
-    'field_out': 'Out',
-    'grounded_into_double_play': 'Out',
-    'double_play': 'Out'
-}
+# outcome_mapping = {
+#     'single': 'Hit',
+#     'double': 'Hit',
+#     'triple': 'Hit',
+#     'home_run': 'Homerun',
+#     'strikeout': 'Strikeout',
+#     'walk': 'Walk',
+#     'hit_by_pitch': 'HBP',
+#     'force_out': 'Out',
+#     'field_out': 'Out',
+#     'grounded_into_double_play': 'Out',
+#     'double_play': 'Out'
+# }
 
-pitch_outcomes['outcome_category'] = pitch_outcomes['events'].map(outcome_mapping)
-pitch_outcomes = pitch_outcomes.dropna()
+# pitch_outcomes['outcome_category'] = pitch_outcomes['events'].map(outcome_mapping)
+# pitch_outcomes = pitch_outcomes.dropna()
 
-# Bin the pitch locations into a 4x4 grid
-bins_x = np.linspace(-1.5, 1.5, 5)  # Adjust based on typical pitch locations
-bins_z = np.linspace(1.0, 4.0, 5)   # Adjust based on typical pitch locations
+# # Bin the pitch locations into a 4x4 grid
+# bins_x = np.linspace(-1.5, 1.5, 5)  # Adjust based on typical pitch locations
+# bins_z = np.linspace(1.0, 4.0, 5)   # Adjust based on typical pitch locations
 
-pitch_outcomes['binned_plate_x'] = pd.cut(pitch_outcomes['plate_x'], bins=bins_x, labels=None )
-pitch_outcomes['binned_plate_z'] = pd.cut(pitch_outcomes['plate_z'], bins=bins_z, labels=None)
+# pitch_outcomes['binned_plate_x'] = pd.cut(pitch_outcomes['plate_x'], bins=bins_x, labels=None )
+# pitch_outcomes['binned_plate_z'] = pd.cut(pitch_outcomes['plate_z'], bins=bins_z, labels=None)
 
 
-outcome_category = st.selectbox('Select Outcome Category', pitch_outcomes['outcome_category'].unique())
+# outcome_category = st.selectbox('Select Outcome Category', pitch_outcomes['outcome_category'].unique())
 
-filtered_data = pitch_outcomes[pitch_outcomes['outcome_category'] == outcome_category]
-outcome_freq = filtered_data.pivot_table(index='binned_plate_z', columns='binned_plate_x', values='events', aggfunc='count', fill_value=0)
+# filtered_data = pitch_outcomes[pitch_outcomes['outcome_category'] == outcome_category]
+# outcome_freq = filtered_data.pivot_table(index='binned_plate_z', columns='binned_plate_x', values='events', aggfunc='count', fill_value=0)
 
-plt.figure(figsize=(8, 6))
-ax = sns.heatmap(outcome_freq, cmap="crest", cbar=True, annot=True, yticklabels=False, xticklabels=False)
-plt.title(f'{outcome_category} Frequency by Location')
-ax.set(xlabel="", ylabel="")
+# plt.figure(figsize=(8, 6))
+# ax = sns.heatmap(outcome_freq, cmap="crest", cbar=True, annot=True, yticklabels=False, xticklabels=False)
+# plt.title(f'{outcome_category} Frequency by Location')
+# ax.set(xlabel="", ylabel="")
 
-st.pyplot(plt.gcf())
+# st.pyplot(plt.gcf())
+
+# --------------------------------------------------------------------------------------------------------------

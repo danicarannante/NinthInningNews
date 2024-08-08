@@ -113,3 +113,73 @@ fig = spraychart(filtered_data, stadium_mapping[selected_team], size=50, title=f
 st.pyplot(fig)
 
 # --------------------------------------------------------------
+all_data = statcast_batter(start_dt='2023-04-01', end_dt='2024-10-01',player_id = pid).get(['pfx_x','pfx_z','launch_speed','launch_angle','pitch_name','p_throws', 'release_speed', 'release_spin_rate','plate_x', 'plate_z', 'player_name', 'game_year', 'description', 'bb_type'])
+
+# # Streamlit sidebar inputs for date range
+# start_date = st.sidebar.date_input('Start Date', value=pd.to_datetime('2023-04-01'))
+# end_date = st.sidebar.date_input('End Date', value=pd.to_datetime('2023-10-01'))
+
+# Mutate and clean the data to create 'heatmap_data'
+all_data['pfx_x_in_pv'] = -12 * all_data['pfx_x']
+all_data['pfx_z_in'] = 12 * all_data['pfx_z']
+
+# Create 'barrel' column based on conditions
+all_data['barrel'] = np.where(
+    (all_data['launch_speed'] * 1.5 - all_data['launch_angle'] >= 117) &
+    (all_data['launch_speed'] + all_data['launch_angle'] >= 124) &
+    (all_data['launch_speed'] >= 97) &
+    (all_data['launch_angle'] > 4) & (all_data['launch_angle'] < 50),
+    1, 0
+)
+# Create 'pitch_type' column based on 'pitch_name'
+all_data['pitch_type'] = all_data['pitch_name'].apply(lambda x: 
+    "Breaking Ball" if x in ["Slider", "Curveball", "Knuckle Curve", "Slurve", "Sweeper", "Slow Curve"] else
+    "Fastball" if x in ["4-Seam Fastball", "Sinker", "Cutter"] else
+    "Offspeed" if x in ["Changeup", "Split-Finger", "Other", "Knuckleball", "Eephus"] else
+    "Unknown"
+)
+
+# Select the required columns
+heatmap_data = all_data[
+    ['pitch_name', 'p_throws', 'release_speed', 'pfx_x_in_pv', 'pfx_z_in', 'release_spin_rate', 
+     'plate_x', 'plate_z', 'player_name', 'game_year', 'description', 'bb_type', 'barrel']
+].dropna()
+
+# Function to filter data for each heat map stat-type
+def find_plots(data, column, value):
+    return data[data[column] == value]
+
+pitch_type_filter = st.selectbox('Select Pitch Type', heatmap_data['pitch_name'].unique())
+filtered_data = find_plots(heatmap_data, 'pitch_name', pitch_type_filter)
+l_filtered =  find_plots(filtered_data, 'p_throws', 'L')
+r_filtered =  find_plots(filtered_data, 'p_throws', 'R')
+
+from matplotlib.patches import Rectangle
+# Plot KDE plot using Seaborn
+plt.figure()
+def create_plot(filtered_data):
+    plt.figure()
+    sns.kdeplot(
+        x=filtered_data['plate_x'], 
+        y=filtered_data['plate_z'], 
+        cmap='crest', 
+        thresh=0.1, 
+        levels=100,
+        fill=True, 
+    )
+    strike_zone = Rectangle((-1, 1.5), 2, 2, fill=False, edgecolor='black', linewidth=1)
+    plt.gca().add_patch(strike_zone)
+    plt.xlim(-2,2)
+    plt.ylim(0, 5)
+    print(filtered_data['p_throws'])
+
+    plt.title(f"Swing Heatmap for ")
+    plt.xlabel('Horizontal Plate Location')
+    plt.ylabel('Vertical Plate Location')
+    plt.gca()
+
+    return(plt.gcf())
+
+col1,col2 = st.columns(2)
+col1.pyplot(create_plot(l_filtered))
+col2.pyplot(create_plot(r_filtered))
