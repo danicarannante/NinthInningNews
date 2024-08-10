@@ -93,7 +93,6 @@ heatmap_header = f"""
     </div>
     """
 st.markdown(heatmap_header, unsafe_allow_html=True)
-cache.enable()
 all_data = statcast_batter(start_dt=f'{st.session_state["year"]}-04-01', end_dt=f'{st.session_state["year"]}-10-01',player_id = pid).get(['pfx_x','pfx_z','launch_speed','launch_angle','pitch_name','p_throws', 'release_speed', 'release_spin_rate','plate_x', 'plate_z', 'player_name', 'game_year', 'description', 'bb_type'])
 
 # # Streamlit sidebar inputs for date range

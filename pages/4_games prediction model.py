@@ -49,7 +49,6 @@ info = f"""
 st.markdown(info, unsafe_allow_html=True)
 
 text = ''' This prediction model estimates the winner of an MLB game by comparing offensive and pitching stats. 
-It calculates a confidence score based on the differences in expected offensive production (xOP) and expected earned run average (xERA) for both teams. 
 The model then predicts the winner by evaluating whether the home team has superior offensive and pitching metrics compared to the away team, or vice versa. 
 The red box represents a wrong prediction while the green box represents a correct prediction.'''
 
@@ -135,11 +134,6 @@ def normalize_name(name):
     """Normalize the name by converting to lowercase and removing special characters."""
     return re.sub(r'\W+', '', name.lower())
 
-def calculate_confidence(home_team_xOP, away_team_xOP, home_pitcher_xERA, away_pitcher_xERA):
-    """Calculate the confidence of a prediction based on differences in xOP and xERA."""
-    xOP_diff = abs(home_team_xOP - away_team_xOP)
-    xERA_diff = abs(home_pitcher_xERA - away_pitcher_xERA)
-    return xOP_diff + xERA_diff
 
 def predict_game_winner(game, team_batting_stats, team_pitching_stats):
     # Normalize team and pitcher names
@@ -151,11 +145,11 @@ def predict_game_winner(game, team_batting_stats, team_pitching_stats):
     # Check if teams and pitchers are in the stats dictionaries
     if home_team not in team_batting_stats or away_team not in team_batting_stats:
         print(f"Warning: One of the teams ({home_team}, {away_team}) not found in team_batting_stats")
-        return None, None
+        return None
 
     if home_pitcher not in team_pitching_stats or away_pitcher not in team_pitching_stats:
         print(f"Warning: One of the pitchers ({home_pitcher}, {away_pitcher}) not found in team_pitching_stats")
-        return None, None
+        return None
 
     # Get xOP and xERA for home and away teams
     home_team_xOP = team_batting_stats[home_team]['xOP']
@@ -163,44 +157,30 @@ def predict_game_winner(game, team_batting_stats, team_pitching_stats):
     home_pitcher_xERA = team_pitching_stats[home_pitcher]['xERA']
     away_pitcher_xERA = team_pitching_stats[away_pitcher]['xERA']
 
-    # Calculate confidence based on differences in xOP and xERA
-    confidence = calculate_confidence(home_team_xOP, away_team_xOP, home_pitcher_xERA, away_pitcher_xERA)
 
     # Predict the winner based on xOP and xERA comparison
     if home_team_xOP > away_team_xOP and home_pitcher_xERA < away_pitcher_xERA:
-        return game['home_team'], confidence
+        return game['home_team']
     elif home_team_xOP < away_team_xOP and home_pitcher_xERA > away_pitcher_xERA:
-        return game['away_team'], confidence
+        return game['away_team']
     elif home_team_xOP == away_team_xOP and home_pitcher_xERA < away_pitcher_xERA:
-        return game['home_team'], confidence
+        return game['home_team']
     elif home_team_xOP == away_team_xOP and home_pitcher_xERA > away_pitcher_xERA:
-        return game['away_team'], confidence
+        return game['away_team']
     else:
         # In case of ties or inconclusive predictions, return default values
-        return None, None
+        return None
 
 
 def predict_games(today_games, team_batting_stats, team_pitching_stats):
     predictions = []
 
     for game in today_games:
-        winner, confidence = predict_game_winner(game, team_batting_stats, team_pitching_stats)
-        if winner:
+        winner = predict_game_winner(game, team_batting_stats, team_pitching_stats)
+        if winner != None :
             game['predicted_winner'] = winner
-            game['confidence'] = confidence
             predictions.append(game)
 
-    # Sort predictions by confidence in descending order
-    predictions.sort(key=lambda x: x['confidence'], reverse=True)
-
-    # Assign ranks
-    rank = 0
-    prev_confidence = None
-    for prediction in predictions:
-        if prediction['confidence'] != prev_confidence:
-            rank += 1
-        prediction['rank'] = rank
-        prev_confidence = prediction['confidence']
     return predictions
 
 
@@ -212,10 +192,8 @@ team_pitching_stats = {normalize_name(k): v for k, v in pitcher_stats_dict.items
 
 # Predict game winners
 predictions = predict_games(matchups, team_batting_stats, team_pitching_stats)
-print(predictions)
 
 def get_team_logo_url(team):
-    print(f"https://a.espncdn.com/combiner/i?img=/i/teamlogos/mlb/500/{img_mapping[team]}.png")
     return f"https://a.espncdn.com/combiner/i?img=/i/teamlogos/mlb/500/{img_mapping[team]}.png"
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -236,7 +214,6 @@ def create_game_card(results):
                     </div>
                     <div style="flex: 1; text-align: center;">
                         <p style="font-size: 16px;">Predicted Winner:<br>{results['predicted_winner']}</p>
-                        <p style="font-size: 16px;">Confidence: {float(results['confidence']):.2f}</p>
                     </div>
                     <div style="flex: 1; text-align: right;">
                         <img src="{get_team_logo_url(p['away_team'])}" width="50" alt="{p['away_team']} logo">
