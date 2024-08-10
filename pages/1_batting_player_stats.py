@@ -62,48 +62,22 @@ with col1:
 with col2:
     st.markdown(season_xwOBA, unsafe_allow_html=True)
 
-# ----------------------------------- Statcast Batter Table --------------------------
+# ----------------------------------- Data Cleaning --------------------------
 #data = statcast_batter('2008-04-01','2024-11-01',player_id=pid) # grab all historic data
 pid = player_lookup['key_mlbam'].values[0]
 data = statcast_batter(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid)#.get(['player_name','p_throws','launch_angle','launch_speed','hit_location','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom','game_type','hc_x','hc_y']) # 1 year data for 2023, filter out foul balls,strikes, balls
 data = data[data['game_type'] == 'R']
 data['bb_type'] = data['bb_type'] .replace({'ground_ball': 'ground ball','line_drive': 'line drive','fly_ball':'fly ball'})
 
-hits_df = data[data['events'].isin(['single','double','triple','home_run'])] #.get(['player_name','launch_angle','launch_speed','hit_location','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom'])
-hits_df['hit_classification'] = hits_df.apply(classify_hit, axis=1)
-hit_summary_df = create_summary_table(hits_df).set_index('batted ball type')
-
-
-if 'league_data' in st.session_state:
-    league_data = st.session_state['league_data']
-    hits_league_data = league_data[league_data['events'].isin(['single','double','triple','home_run'])] # .get(['player_name','hit_location','launch_angle','launch_speed','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom'])
-    hits_league_data['bb_type'] = hits_league_data['bb_type'] .replace({'ground_ball': 'ground ball','line_drive': 'line drive','fly_ball':'fly ball'})
-    hits_league_data['hit_classification'] = hits_league_data.apply(classify_hit, axis=1)
-    league_summary_df = create_summary_table(hits_league_data).set_index('batted ball type')
-    
-    player_title= f"""
-    <div margin-bottom:10px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
-        <h1 style='margin-bottom: 5px; text-align: center; font-size: 20px'>Directional Batted Ball Average Statistics for {st.session_state["year"]}</h1>
-    </div>
-    """
-    st.markdown(player_title, unsafe_allow_html=True)
-    st.dataframe(get_comparison(hit_summary_df,league_summary_df),use_container_width=True)
-
-key = f"""
-<div style='background-color:LightBlue; margin-bottom:10px; padding: 10px;border-radius: 5px; text-align: center; width: auto;'>
-    <p1 text-align: center; font-size: 18px'>Yellow: Within + or -.005 of league average value <br> Green: Greater than league average value <br> Pink: Less than league average value </p1>
-</div>
-"""
-st.sidebar.markdown(key, unsafe_allow_html=True)
-
 # ----------------------------- Hits spraychart ----------------------------- 
 spray_title = f"""
 <div style='border-radius: 5px; text-align: center; width: auto;'>
-    <h1 style='margin-bottom: 5px; font-size: 20px;'> Hit Type Outcomes for L vs R Handed Pitchers </h1>
+    <h1 style='margin-bottom: 5px; font-size: 20px;'>Hit Type Outcomes for L vs R Handed Pitchers </h1>
 </div>
 """
 st.markdown(spray_title, unsafe_allow_html=True)
 
+col1,col2 = st.columns(2)
 hit_types = data['bb_type'].dropna().unique()  
 selected_hit_type = col1.selectbox("Select Hit Type", hit_types)
 pitcher_selection = col2.selectbox("Right Handed or Left Handed Pitcher", ['R','L'])
@@ -113,7 +87,14 @@ fig = spraychart(filtered_data, stadium_mapping[selected_team], size=50, title=f
 st.pyplot(fig)
 
 # --------------------------------------------------------------
-all_data = statcast_batter(start_dt='2023-04-01', end_dt='2024-10-01',player_id = pid).get(['pfx_x','pfx_z','launch_speed','launch_angle','pitch_name','p_throws', 'release_speed', 'release_spin_rate','plate_x', 'plate_z', 'player_name', 'game_year', 'description', 'bb_type'])
+heatmap_header = f"""
+    <div margin-bottom:10px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
+    <h1 style='text-align: center; font-size: 20px'>Swing Heatmap </h1>
+    </div>
+    """
+st.markdown(heatmap_header, unsafe_allow_html=True)
+cache.enable()
+all_data = statcast_batter(start_dt=f'{st.session_state["year"]}-04-01', end_dt=f'{st.session_state["year"]}-10-01',player_id = pid).get(['pfx_x','pfx_z','launch_speed','launch_angle','pitch_name','p_throws', 'release_speed', 'release_spin_rate','plate_x', 'plate_z', 'player_name', 'game_year', 'description', 'bb_type'])
 
 # # Streamlit sidebar inputs for date range
 # start_date = st.sidebar.date_input('Start Date', value=pd.to_datetime('2023-04-01'))
@@ -156,8 +137,7 @@ r_filtered =  find_plots(filtered_data, 'p_throws', 'R')
 
 from matplotlib.patches import Rectangle
 # Plot KDE plot using Seaborn
-plt.figure()
-def create_plot(filtered_data):
+def create_plot(filtered_data,hand):
     plt.figure()
     sns.kdeplot(
         x=filtered_data['plate_x'], 
@@ -166,14 +146,13 @@ def create_plot(filtered_data):
         thresh=0.1, 
         levels=100,
         fill=True, 
+        legend=True
     )
     strike_zone = Rectangle((-1, 1.5), 2, 2, fill=False, edgecolor='black', linewidth=1)
     plt.gca().add_patch(strike_zone)
     plt.xlim(-2,2)
     plt.ylim(0, 5)
-    print(filtered_data['p_throws'])
-
-    plt.title(f"Swing Heatmap for ")
+    plt.title(f"Swing Heatmap vs {hand} Handed Pitchers ")
     plt.xlabel('Horizontal Plate Location')
     plt.ylabel('Vertical Plate Location')
     plt.gca()
@@ -181,5 +160,87 @@ def create_plot(filtered_data):
     return(plt.gcf())
 
 col1,col2 = st.columns(2)
-col1.pyplot(create_plot(l_filtered))
-col2.pyplot(create_plot(r_filtered))
+col1.pyplot(create_plot(l_filtered,'L'))
+col2.pyplot(create_plot(r_filtered, 'R'))
+
+
+# -------------------------------------------------------------------------------------------------
+# # hits_df = data[data['events'].isin(['single','double','triple','home_run'])] #.get(['player_name','launch_angle','launch_speed','hit_location','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom'])
+# # hits_df['hit_classification'] = hits_df.apply(classify_hit, axis=1)
+# hit_summary_df = create_summary_table(hits_df).set_index('batted ball type')
+
+# if 'league_data' in st.session_state:
+#     league_data = st.session_state['league_data']
+#     hits_league_data = league_data[league_data['events'].isin(['single','double','triple','home_run'])] # .get(['player_name','hit_location','launch_angle','launch_speed','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom'])
+#     hits_league_data['bb_type'] = hits_league_data['bb_type'] .replace({'ground_ball': 'ground ball','line_drive': 'line drive','fly_ball':'fly ball'})
+#     hits_league_data['hit_classification'] = hits_league_data.apply(classify_hit, axis=1)
+#     league_summary_df = create_summary_table(hits_league_data).set_index('batted ball type')
+    
+#     player_title= f"""
+#     <div margin-bottom:10px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
+#         <h1 style='margin-bottom: 5px; text-align: center; font-size: 20px'>Directional Batted Ball Average Statistics for {st.session_state["year"]}</h1>
+#     </div>
+#     """
+#     st.markdown(player_title, unsafe_allow_html=True)
+#     st.dataframe(get_comparison(hit_summary_df,league_summary_df),use_container_width=True)
+
+# key = f"""
+# <div style='background-color:LightBlue; margin-bottom:10px; padding: 10px;border-radius: 5px; text-align: center; width: auto;'>
+#     <p1 text-align: center; font-size: 18px'>Yellow: Within + or -.005 of league average value <br> Green: Greater than league average value <br> Pink: Less than league average value </p1>
+# </div>
+# """
+# st.sidebar.markdown(key, unsafe_allow_html=True)
+
+# -----------------------------------------------------------------------------------
+rate_header = f"""
+    <div margin-bottom:10px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
+    <h1 style='margin-bottom: 5px; text-align: center; font-size: 20px'>Distribution of Batted Ball Types by Year</h1>
+    </div>
+    """
+st.markdown(rate_header, unsafe_allow_html=True)
+
+cache.enable()
+def get_historical_rate_occurrence(years, player_id):
+    historical_data = []
+    for year in years:
+        data = statcast_batter(f"{year}-01-01", f"{year}-12-31", player_id=player_id)
+        data = data[data['game_type'] == 'R']
+        data['bb_type'] = data['bb_type'].replace({'ground_ball': 'ground ball', 'line_drive': 'line drive', 'fly_ball': 'fly ball'})
+        hits_df = data[data['events'].isin(['single', 'double', 'triple', 'home_run'])]
+        hits_df['hit_classification'] = hits_df.apply(classify_hit, axis=1)
+        summary_df = create_summary_table(hits_df)
+        summary_df['year'] = year
+        historical_data.append(summary_df[['batted ball type', 'rate_occurrence', 'year']])
+    return pd.concat(historical_data)
+
+# Specify the years and player_id
+years = [2021, 2022, 2023, 2024]
+player_id = pid  # Replace with actual player_id
+
+# Get the historical data
+historical_rate_occurrence = get_historical_rate_occurrence(years, player_id)
+
+# Round to three decimal points and convert to percentage
+historical_rate_occurrence['rate_occurrence'] = (historical_rate_occurrence['rate_occurrence']).round(3)
+
+def plot_sns_rate_occurrence(df):  
+    plt.figure(figsize=(12, 7))
+    bar_plot = sns.barplot(
+        x='year',
+        y='rate_occurrence',
+        hue='batted ball type',
+        data=df,
+        palette=sns.color_palette("Paired")
+    )
+
+    # Add labels and title
+    bar_plot.set_xlabel('Year')
+    bar_plot.set_ylabel('Percentage')
+    bar_plot.set_title('Percentage of Batted Ball Types by Year')
+
+    bar_plot.legend(title='Batted Ball Type', bbox_to_anchor=(1.05, .5), loc='center left',fontsize=16)
+
+    # Display the plot in Streamlit
+    st.pyplot(plt)
+
+plot_sns_rate_occurrence(historical_rate_occurrence)
