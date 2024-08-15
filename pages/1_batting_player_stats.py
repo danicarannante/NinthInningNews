@@ -241,5 +241,7 @@ def plot_sns_rate_occurrence(df):
 
     # Display the plot in Streamlit
     st.pyplot(plt)
-
-plot_sns_rate_occurrence(historical_rate_occurrence)
+try:
+    plot_sns_rate_occurrence(historical_rate_occurrence)
+except KeyError:
+    pass
