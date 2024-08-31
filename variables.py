@@ -117,7 +117,7 @@ pitch_type_mapping = {
     'ST':'Sweeper'
 }
 
-
+@st.cache_data
 def create_summary_table(data):
     # Calculate total number of hits for rate calculation
     total_hits = len(data)

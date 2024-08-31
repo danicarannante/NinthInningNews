@@ -28,7 +28,10 @@ selected_year = st.sidebar.selectbox('Year', list(reversed(range(2019,2025))))
 current_standings = standings(selected_year)
 for league in current_standings:
     league.rename(columns={'Tm': 'Team'}, inplace=True)
-    league.drop(columns=['E#'], inplace=True)
+    try:
+        league.drop(columns=['E#'], inplace=True)
+    except KeyError:
+        pass
 
 st.session_state['year'] = selected_year
 st.session_state['data'] = False
