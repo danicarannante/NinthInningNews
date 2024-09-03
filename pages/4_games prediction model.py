@@ -64,13 +64,15 @@ start_date = end_date - timedelta(days=60)  # Two months ago
 
 # Create the slider
 selected_date = st.sidebar.slider(
-    "Select Date Range",
+    "Select Date",
     min_value=start_date.date(),
     max_value=end_date.date(),
     value=end_date.date(),
     format="YYYY-MM-DD"
 )
 
+date_description = selected_date.strftime("%B %d, %Y")
+st.markdown(date_description, unsafe_allow_html=True)
 
 data = pitching_stats(2024, qual=5)
 pitcher_stats = data[['Name', 'xERA', 'ERA', 'Stuff+']]

@@ -29,6 +29,7 @@ mistakes per appearance, and approximate batters faced per game.Utilizing LASSO 
 # comparing predicted versus actual strikeouts, with a trendline illustrating the relationship between these values. Hover tooltips provide
 # additional context by displaying key metrics like ERA, WHIP, and mistakes per appearance. The accuracy of the model is demonstrated by how closely the 
 # predicted strikeouts align with the actual values, offering insights into the effectiveness of various pitching metrics for forecasting performance.'''
+
 prediction_descrip = f"""
     <div style=margin-bottom:5px; text-align: center; width: auto;'>
         <p style='font-size: 14px;font-style: italic;'>{text}</p> 
