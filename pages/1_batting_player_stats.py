@@ -9,7 +9,6 @@ import seaborn as sns
 from pybaseball import cache
 import numpy as np
 
-
 cache.enable()
 
 selected_team = st.sidebar.selectbox('Select a team:', st.session_state["teams"])
@@ -21,6 +20,7 @@ players = sorted([name for name in filtered['Name']])
 selected_player = st.sidebar.selectbox('Select a player:', players)
 player_info = filtered[filtered['Name'] == selected_player].get(['Age','G','AB','PA','H','1B','2B','3B','HR','R','RBI','BB','HBP','SF','SH','wRC+','wOBA',])
 print(selected_player)
+
 player_lookup = playerid_lookup(selected_player.split(" ")[1],selected_player.split(" ")[0],fuzzy=True) # contains id to use in baseball reference
 player_api_id = player_lookup['key_mlbam'].values[0]
 player_fangraphs_id = player_lookup['key_fangraphs'].values[0]
@@ -33,13 +33,13 @@ info = f"""
     <img src='{img_url}' style='width: 100px; margin-right: 15px; border-radius: 5px;'>
     <div style='flex-grow: 1; text-align: center; display: flex; flex-direction: column; justify-content: center;'>
         <h1 style='text-align: center; font-size: 35px;'>{selected_player}</h1> 
-        <p style='font-size: 20px;'>Age: {player_info["Age"].values[0]} | Debut: {debut_date} | Team : {selected_team}</p>
+        <p style='font-size: 20px;'>Age: {player_info["Age"].values[0]} | Debut: {debut_date} | Team : {selected_team} | {st.session_state['year']}</p>
     </div>
 </div>
 """
 st.markdown(info, unsafe_allow_html=True)
 
-# -------------------------- Player Stats --------------------------------------------
+# -------------------------- Player Stats blocks--------------------------------------------
 short_df = player_info.get(['G','AB','PA','H','1B','2B','3B','HR','R','RBI','BB','HBP','SF','SH'])
 st.dataframe(short_df,hide_index=True)
 
@@ -62,11 +62,9 @@ with col1:
 with col2:
     st.markdown(season_xwOBA, unsafe_allow_html=True)
 
-# ----------------------------------- Data Cleaning --------------------------
-
-#data = statcast_batter('2008-04-01','2024-11-01',player_id=pid) # grab all historic data
+# ----------------------------------- Statcast Batter Data --------------------------
 pid = player_lookup['key_mlbam'].values[0]
-data = statcast_batter(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid)#.get(['player_name','p_throws','launch_angle','launch_speed','hit_location','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom','game_type','hc_x','hc_y']) # 1 year data for 2023, filter out foul balls,strikes, balls
+data = statcast_batter(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid)
 data = data[data['game_type'] == 'R']
 data['bb_type'] = data['bb_type'] .replace({'ground_ball': 'ground ball','line_drive': 'line drive','fly_ball':'fly ball'})
 
@@ -87,14 +85,14 @@ filtered_data = filtered_data[filtered_data['p_throws'] == pitcher_selection]
 fig = spraychart(filtered_data, stadium_mapping[selected_team], size=50, title=f"{selected_hit_type} for {st.session_state['year']}").get_figure()
 st.pyplot(fig)
 
-# ------------------------  heat map---------------------------
+# -------------------------- heat map ---------------------------
 heatmap_header = f"""
     <div margin-bottom:10px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
     <h1 style='text-align: center; font-size: 20px'>Swing Heatmap </h1>
     </div>
     """
 st.markdown(heatmap_header, unsafe_allow_html=True)
-all_data = statcast_batter(start_dt=f'{st.session_state["year"]}-04-01', end_dt=f'{st.session_state["year"]}-10-01',player_id = pid).get(['pfx_x','pfx_z','launch_speed','launch_angle','pitch_name','p_throws', 'release_speed', 'release_spin_rate','plate_x', 'plate_z', 'player_name', 'game_year', 'description', 'bb_type'])
+all_data = data.get(['pfx_x','pfx_z','launch_speed','launch_angle','pitch_name','p_throws', 'release_speed', 'release_spin_rate','plate_x', 'plate_z', 'player_name', 'game_year', 'description', 'bb_type'])
 
 all_data['pfx_x_in_pv'] = -12 * all_data['pfx_x']
 all_data['pfx_z_in'] = 12 * all_data['pfx_z']
@@ -203,8 +201,10 @@ def get_historical_rate_occurrence(years, player_id):
         hits_df['hit_classification'] = hits_df.apply(classify_hit, axis=1)
         summary_df = create_summary_table(hits_df)
         summary_df['year'] = year
-        print(summary_df)
-        historical_data.append(summary_df[['batted ball type', 'rate_occurrence', 'year']])
+        try:
+            historical_data.append(summary_df[['batted ball type', 'rate_occurrence', 'year']])
+        except KeyError:
+            return
     return pd.concat(historical_data)
 
 # Specify the years and player_id
@@ -236,7 +236,5 @@ def plot_sns_rate_occurrence(df):
 
     # Display the plot in Streamlit
     st.pyplot(plt)
-try:
-    plot_sns_rate_occurrence(historical_rate_occurrence)
-except KeyError:
-    pass
+
+plot_sns_rate_occurrence(historical_rate_occurrence)

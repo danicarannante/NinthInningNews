@@ -35,27 +35,26 @@ info = f"""
     <img src='{img_url}' style='width: 100px; margin-right: 15px; border-radius: 5px;'>
     <div style='flex-grow: 1; text-align: center; display: flex; flex-direction: column; justify-content: center;'>
         <h1 style='text-align: center; font-size: 35px;'>{selected_player}</h1> 
-        <p style='font-size: 20px;'>Age: {player_info["Age"].values[0]} | Debut: {debut_date} | Team : {selected_team}</p>
+        <p style='font-size: 20px;'>Age: {player_info["Age"].values[0]} | Debut: {debut_date} | Team : {selected_team} | {st.session_state['year']}</p>
     </div>
 </div>
 """
 st.markdown(info, unsafe_allow_html=True)
 
-
 # -------------------------- Player Stats --------------------------------------------
 short_df = player_info.get(['W','L','G','GS','IP','WHIP','WAR','ERA','SV','FIP','xFIP','BB','SO','TTO%'])
 st.dataframe(short_df,hide_index=True)
 
-# ----------------------------------- Statcast Pitcher Table --------------------------
+# ----------------------------------- Statcast Pitcher Data --------------------------
 pid = player_lookup['key_mlbam'].values[0]
-data = statcast_pitcher(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid)#.get(['player_name','release_speed','events','pitch_type','game_type','plate_x','plate_z']) # 1 year data for 2023, filter out foul balls,strikes, balls
+data = statcast_pitcher(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid) # 1 Year
 data = data[data['game_type'] == 'R']
 pitches_df = data.get(['player_name','release_speed','pitch_type'])
 
 # ----------------------- strike zone display and velocity distribution  --------------------------
 subheader = f"""
     <div margin-bottom:5px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
-        <h1 style='text-align: center; font-size: 20px'>Pitch Distribution</h1>
+        <h1 style='text-align: center; font-size: 20px'>Pitch Analysis</h1>
     </div>
     """
 
@@ -71,6 +70,7 @@ fig = plot_strike_zone(filtered_avg_data).get_figure()
 
 col1,col2 = st.columns(2)
 col2.pyplot(fig)
+
 descript = f"""
 <div style='text-align: center; width: auto;'>
     <p style='margin-bottom: 0px;'><em>pitches above {avg_val}mph </em></p> 
@@ -78,7 +78,7 @@ descript = f"""
 """
 col2.markdown(descript, unsafe_allow_html=True)
 
-# ------------------------------------------------------------------------------
+# ------------------------- chart ----------------------------------------
 
 fig, ax = plt.subplots(figsize=(8, 4))
 kde = sns.kdeplot(
@@ -101,3 +101,22 @@ col1.pyplot(fig)
 
 print("you got this")
 
+# -------------------------- pitch type pie chart ---------------
+pie_header = f"""
+    <div margin-bottom:5px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
+        <h1 style='text-align: center; font-size: 20px'>Pitch Distribution</h1>
+    </div>
+    """
+
+st.markdown(pie_header, unsafe_allow_html=True)
+data['pitch_type_full'] = data['pitch_type'].map(pitch_type_mapping)
+pitch_type_counts = data['pitch_type_full'].value_counts()
+
+# Create a pie chart
+fig, ax = plt.subplots()
+ax.pie(pitch_type_counts, labels=pitch_type_counts.index, autopct='%1.2f%%', startangle=80)
+ax.axis('equal')  # Equal aspect ratio ensures the pie is drawn as a circle.
+
+ax.legend(pitch_type_counts.index, title="Pitch Types", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
+
+st.pyplot(fig)
