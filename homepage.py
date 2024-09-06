@@ -13,7 +13,7 @@ NinthInningNews = """
             font-weight: bold;
             color: #333; /* Dark color for the title */
             text-align: center;
-            margin: 20px 0; /* Vertical spacing */
+            margin: 5px 0; /* Vertical spacing */
             padding: 0 10px; /* Horizontal padding for smaller screens */
             box-sizing: border-box; /* Ensure padding doesn't affect width */
         }
@@ -23,6 +23,16 @@ NinthInningNews = """
     </div>
 """
 st.markdown(NinthInningNews, unsafe_allow_html=True)
+
+bio = f"""
+<div style='text-align: center; width: auto;'>
+    <p style='margin-bottom:10px; font-style: italic; font-size: 12px;'> Hi and welcome to Ninth Inning News! My name is Daniela and this app is a personal project designed to sharpen my programming skills, explore new tools, and dive deep into the world of baseball data. Feel free to explore, click around, and enjoy the content!
+    If you have any questions or feedback, don’t hesitate to reach out at: danielacarannante3@gmail.com.
+</p> 
+</div>
+"""
+
+st.markdown(bio, unsafe_allow_html=True)
 
 selected_year = st.sidebar.selectbox('Year', list(reversed(range(2019,2025))))
 current_standings = standings(selected_year)
