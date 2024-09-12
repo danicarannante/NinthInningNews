@@ -36,34 +36,34 @@ st.markdown(bio, unsafe_allow_html=True)
 
 selected_year = st.sidebar.selectbox('Year', list(reversed(range(2019,2025))))
 
-# current_standings = standings(selected_year)
-# print(current_standings)
-# for league in current_standings:
-#     league.rename(columns={'Tm': 'Team'}, inplace=True)
-#     try:
-#         league.drop(columns=['E#'], inplace=True)
-#     except KeyError:
-#         print("error occured")
-#         pass
+current_standings = standings(selected_year)
+print(current_standings)
+for league in current_standings:
+    league.rename(columns={'Tm': 'Team'}, inplace=True)
+    try:
+        league.drop(columns=['E#'], inplace=True)
+    except KeyError:
+        print("error occured")
+        pass
 
 st.session_state['year'] = selected_year
 st.session_state['data'] = False
 
-# title = f"""
-# <div style='background-color: LightBlue; border-radius: 5px; text-align: center; width: auto;'>
-#     <h1 style='margin-bottom: 5px; font-size: 18px;'>League Standings for {selected_year} </h1>
-# </div>
-# """
-# st.markdown(title, unsafe_allow_html=True)
+title = f"""
+<div style='background-color: LightBlue; border-radius: 5px; text-align: center; width: auto;'>
+    <h1 style='margin-bottom: 5px; font-size: 18px;'>League Standings for {selected_year} </h1>
+</div>
+"""
+st.markdown(title, unsafe_allow_html=True)
 
-# col1, col2 = st.columns(2)
-# for league in current_standings[:3]:
-#     col1.write(league)
-#     print("checking...")
-# for league in current_standings[3:]:
-#     col2.write(league)
-#     print("checking...")
-# teams = sorted(set(team for table in current_standings for team in table['Team']))
+col1, col2 = st.columns(2)
+for league in current_standings[:3]:
+    col1.write(league)
+    print("checking...")
+for league in current_standings[3:]:
+    col2.write(league)
+    print("checking...")
+teams = sorted(set(team for table in current_standings for team in table['Team']))
 
 st.session_state['teams'] = team_mapping.keys()
 
