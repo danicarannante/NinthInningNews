@@ -23,7 +23,7 @@ selected_player = st.sidebar.selectbox('Select a pitcher:', players)
 player_info = filtered[filtered['Name'] == selected_player].get(['Age','W','L','G','GS','IP','WHIP','WAR','ERA','SV','FIP','xFIP','BB','SO','TTO%'])
 print(selected_player)
 
-player_lookup = playerid_lookup(selected_player.split(" ")[1],selected_player.split(" ")[0]) # contains id to use in baseball reference
+player_lookup = playerid_lookup(selected_player.split(" ")[1],selected_player.split(" ")[0],fuzzy=True) # contains id to use in baseball reference
 player_api_id = player_lookup['key_mlbam'].values[0]
 player_fangraphs_id = player_lookup['key_fangraphs'].values[0]
 debut_date = int(player_lookup['mlb_played_first'].values[0])
@@ -120,3 +120,77 @@ ax.axis('equal')  # Equal aspect ratio ensures the pie is drawn as a circle.
 ax.legend(pitch_type_counts.index, title="Pitch Types", loc="center left", bbox_to_anchor=(1, 0, 0.5, 1))
 
 st.pyplot(fig)
+
+# -------------------------------- Bar Chart for Pitch Types -------------------------------------
+pitch_header = """
+    <div style='margin-bottom:10px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
+    <h1 style='margin-bottom: 5px; text-align: center; font-size: 20px'>Distribution of Pitch Types by Year</h1>
+    </div>
+    """
+st.markdown(pitch_header, unsafe_allow_html=True)
+
+# Caching function to prevent redundant API calls
+@st.cache_data(show_spinner=True)
+def get_pitch_type_distribution(years, pitcher_id):
+    historical_data = []
+    for year in years:
+        try:
+            # Fetch Statcast data for the pitcher
+            data = statcast_pitcher(f"{year}-01-01", f"{year}-12-31", player_id=pitcher_id)
+            data = data[data['game_type'] == 'R']  # Only regular season games
+
+            # Create a summary table for pitch type occurrences
+            pitch_summary = data['pitch_type'].value_counts(normalize=True).reset_index()
+            pitch_summary.columns = ['pitch_type', 'rate_occurrence']
+            pitch_summary['year'] = year
+            pitch_summary['pitch_type'] = pitch_summary['pitch_type'].map(pitch_type_mapping)
+
+            # Append summary for each year
+            historical_data.append(pitch_summary[['pitch_type', 'rate_occurrence', 'year']])
+
+        except Exception as e:
+            print(f"Error processing data for year {year}: {e}")
+    
+    # Return the concatenated DataFrame if there is valid data, otherwise return empty
+    if historical_data:
+        return pd.concat(historical_data)
+    else:
+        return pd.DataFrame()
+
+# Specify the years and pitcher_id
+years = [2021, 2022, 2023, 2024]
+
+# Get the historical pitch type data with error handling
+historical_pitch_type_data = get_pitch_type_distribution(years, pid)
+
+# Check if the returned DataFrame is empty
+if not historical_pitch_type_data.empty:
+    # Round to three decimal points and convert to percentage
+    historical_pitch_type_data['rate_occurrence'] = (historical_pitch_type_data['rate_occurrence']).round(3)
+
+    # Function to plot the bar chart using Seaborn
+    def plot_sns_pitch_occurrence(df):  
+        plt.figure(figsize=(12, 7))
+        bar_plot = sns.barplot(
+            x='year',
+            y='rate_occurrence',
+            hue='pitch_type',
+            data=df,
+            palette=sns.color_palette("Paired")
+        )
+
+        # Add labels and title
+        bar_plot.set_xlabel('Year')
+        bar_plot.set_ylabel('Percentage')
+        bar_plot.set_title('Percentage of Pitch Types by Year')
+
+        # Adjust legend position
+        bar_plot.legend(title='Pitch Type', bbox_to_anchor=(1.05, .5), loc='center left', fontsize=16)
+
+        # Display the plot in Streamlit
+        st.pyplot(plt)
+
+    # Plot the data
+    plot_sns_pitch_occurrence(historical_pitch_type_data)
+else:
+    st.error("No valid data available for the selected pitcher and years.")

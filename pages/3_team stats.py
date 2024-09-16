@@ -108,7 +108,7 @@ col1,col2 = st.columns(2)
 bs = batting_stats(st.session_state['year'], end_season=st.session_state['year'], league='all', qual=1, ind=1)
 team_batting = bs[bs["Team" ] == abv]
 for bs in batting_stats_mappings:
-    top_val = team_batting.sort_values(by=bs['abv'], ascending=True).head(5)
+    top_val = team_batting.sort_values(by=bs['abv'], ascending=False).head(5)
     fig = px.bar(
         top_val,
         x=bs['abv'],

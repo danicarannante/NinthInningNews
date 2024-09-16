@@ -1,15 +1,15 @@
 import streamlit as st
-from pybaseball import batting_stats,playerid_lookup, statcast_batter,statcast, spraychart,plot_stadium, playerid_reverse_lookup
-from variables import team_mapping,create_summary_table, classify_hit, get_league_data, stadium_mapping, get_comparison
+from pybaseball import batting_stats,playerid_lookup, statcast_batter, spraychart,plot_stadium, playerid_reverse_lookup
+from variables import team_mapping,create_summary_table, classify_hit, get_league_data, stadium_mapping
 import pandas as pd
 import datetime 
 import matplotlib.pyplot as plt
 import plotly.graph_objs as go
 import seaborn as sns
 from pybaseball import cache
+from matplotlib.patches import Rectangle
 import numpy as np
 
-cache.enable()
 
 selected_team = st.sidebar.selectbox('Select a team:', st.session_state["teams"])
 abv = team_mapping[selected_team]
@@ -39,7 +39,7 @@ info = f"""
 """
 st.markdown(info, unsafe_allow_html=True)
 
-# -------------------------- Player Stats blocks--------------------------------------------
+# -------------------------- Player Stats Blocks--------------------------------------------
 short_df = player_info.get(['G','AB','PA','H','1B','2B','3B','HR','R','RBI','BB','HBP','SF','SH'])
 st.dataframe(short_df,hide_index=True)
 
@@ -62,13 +62,13 @@ with col1:
 with col2:
     st.markdown(season_xwOBA, unsafe_allow_html=True)
 
-# ----------------------------------- Statcast Batter Data --------------------------
+# ------------------------------ Statcast Batter Data ------------------------
 pid = player_lookup['key_mlbam'].values[0]
 data = statcast_batter(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid)
 data = data[data['game_type'] == 'R']
-data['bb_type'] = data['bb_type'] .replace({'ground_ball': 'ground ball','line_drive': 'line drive','fly_ball':'fly ball'})
+data['bb_type'] = data['bb_type'].replace({'ground_ball': 'ground ball','line_drive': 'line drive','fly_ball':'fly ball'})
 
-# ----------------------------- Hits spraychart ----------------------------- 
+# ----------------------------- Hits Spraychart -----------------------------
 spray_title = f"""
 <div style='border-radius: 5px; text-align: center; width: auto;'>
     <h1 style='margin-bottom: 5px; font-size: 20px;'>Hit Type Outcomes for L vs R Handed Pitchers </h1>
@@ -85,7 +85,7 @@ filtered_data = filtered_data[filtered_data['p_throws'] == pitcher_selection]
 fig = spraychart(filtered_data, stadium_mapping[selected_team], size=50, title=f"{selected_hit_type} for {st.session_state['year']}").get_figure()
 st.pyplot(fig)
 
-# -------------------------- heat map ---------------------------
+# -------------------------- Heat Map ---------------------------
 heatmap_header = f"""
     <div margin-bottom:10px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
     <h1 style='text-align: center; font-size: 20px'>Swing Heatmap </h1>
@@ -129,7 +129,7 @@ plots_data = find_plots(heatmap_data, 'pitch_name', pitch_type_filter)
 l_filtered =  find_plots(plots_data, 'p_throws', 'L')
 r_filtered =  find_plots(plots_data, 'p_throws', 'R')
 
-from matplotlib.patches import Rectangle
+
 # Plot KDE plot using Seaborn
 def create_plot(plots_data,hand):
     plt.figure()
@@ -157,10 +157,11 @@ col1,col2 = st.columns(2)
 col1.pyplot(create_plot(l_filtered,'L'))
 col2.pyplot(create_plot(r_filtered, 'R'))
 
-# -------------------------------- table -----------------------------------------
+# -------------------------------- Table -----------------------------------------
 # Group the data by pitch type and calculate summary statistics
 all_data['is_swing'] = all_data['description'].isin(['swinging_strike', 'foul', 'hit_into_play'])
 all_data['is_whiff'] = all_data['description'] == 'swinging_strike'
+
 summary_stats = all_data.groupby('pitch_name').agg(
     Pitch_Count=('pitch_name', 'size'),
     Miss_Rate=('description', lambda x: (x == 'swinging_strike').mean()),
@@ -170,6 +171,7 @@ summary_stats = all_data.groupby('pitch_name').agg(
     Whiff_Rate=('is_whiff', lambda x: x.sum() / all_data.loc[x.index, 'is_swing'].sum()),
     Batting_Average=('description', lambda x: (x == 'hit_into_play').mean()),
 ).reset_index()
+
 summary_stats = summary_stats.rename(columns={
     'Pitch_Count': 'pitch count',
     'Miss_Rate': 'miss rate',
@@ -182,59 +184,77 @@ summary_stats = summary_stats.rename(columns={
 
 st.dataframe(summary_stats[summary_stats['pitch_name'] == pitch_type_filter].drop("pitch_name",axis=1),hide_index=True)
 
-# -------------------------------- bar chart -------------------------------------
-rate_header = f"""
-    <div margin-bottom:10px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
+# -------------------------------- Bar Chart -------------------------------------
+rate_header = """
+    <div style='margin-bottom:10px; padding: 10px; border-radius: 5px; text-align: center; width: auto;'>
     <h1 style='margin-bottom: 5px; text-align: center; font-size: 20px'>Distribution of Batted Ball Types by Year</h1>
     </div>
     """
 st.markdown(rate_header, unsafe_allow_html=True)
 
-cache.enable()
+# Caching function to prevent redundant API calls
+@st.cache_data(show_spinner=True)
 def get_historical_rate_occurrence(years, player_id):
     historical_data = []
     for year in years:
-        data = statcast_batter(f"{year}-01-01", f"{year}-12-31", player_id=player_id)
-        data = data[data['game_type'] == 'R']
-        data['bb_type'] = data['bb_type'].replace({'ground_ball': 'ground ball', 'line_drive': 'line drive', 'fly_ball': 'fly ball'})
-        hits_df = data[data['events'].isin(['single', 'double', 'triple', 'home_run'])]
-        hits_df['hit_classification'] = hits_df.apply(classify_hit, axis=1)
-        summary_df = create_summary_table(hits_df)
-        summary_df['year'] = year
         try:
+            # Fetch Statcast data for the player
+            data = statcast_batter(f"{year}-01-01", f"{year}-12-31", player_id=player_id)
+            data = data[data['game_type'] == 'R']  # Only regular season games
+            data['bb_type'] = data['bb_type'].replace({'ground_ball': 'ground ball', 'line_drive': 'line drive', 'fly_ball': 'fly ball'})
+
+            # Filter hits and classify hit type
+            hits_df = data[data['events'].isin(['single', 'double', 'triple', 'home_run'])]
+            hits_df['hit_classification'] = hits_df.apply(classify_hit, axis=1)
+
+            # Create summary table
+            summary_df = create_summary_table(hits_df)
+            summary_df['year'] = year
             historical_data.append(summary_df[['batted ball type', 'rate_occurrence', 'year']])
-        except KeyError:
-            return
-    return pd.concat(historical_data)
+           
+
+        except Exception as e:
+            print(f"Error processing data for year {year}: {e}")
+    
+   
+    if historical_data:
+        return pd.concat(historical_data)
+    else:
+        return pd.DataFrame()
 
 # Specify the years and player_id
 years = [2021, 2022, 2023, 2024]
-player_id = pid  # Replace with actual player_id
 
-# Get the historical data
-historical_rate_occurrence = get_historical_rate_occurrence(years, player_id)
+# Get the historical data with error handling
+historical_rate_occurrence = get_historical_rate_occurrence(years, pid)
 
-# Round to three decimal points and convert to percentage
-historical_rate_occurrence['rate_occurrence'] = (historical_rate_occurrence['rate_occurrence']).round(3)
+# Check if the returned DataFrame is empty
+if not historical_rate_occurrence.empty:
+    # Round to three decimal points and convert to percentage
+    historical_rate_occurrence['rate_occurrence'] = (historical_rate_occurrence['rate_occurrence']).round(3)
+    # Function to plot the bar chart using Seaborn
+    def plot_sns_rate_occurrence(df):  
+        plt.figure(figsize=(12, 7))
+        bar_plot = sns.barplot(
+            x='year',
+            y='rate_occurrence',
+            hue='batted ball type',
+            data=df,
+            palette=sns.color_palette("Paired")
+        )
 
-def plot_sns_rate_occurrence(df):  
-    plt.figure(figsize=(12, 7))
-    bar_plot = sns.barplot(
-        x='year',
-        y='rate_occurrence',
-        hue='batted ball type',
-        data=df,
-        palette=sns.color_palette("Paired")
-    )
+        # Add labels and title
+        bar_plot.set_xlabel('Year')
+        bar_plot.set_ylabel('Percentage')
+        bar_plot.set_title('Percentage of Batted Ball Types by Year')
 
-    # Add labels and title
-    bar_plot.set_xlabel('Year')
-    bar_plot.set_ylabel('Percentage')
-    bar_plot.set_title('Percentage of Batted Ball Types by Year')
+        # Adjust legend position
+        bar_plot.legend(title='Batted Ball Type', bbox_to_anchor=(1.05, .5), loc='center left', fontsize=16)
 
-    bar_plot.legend(title='Batted Ball Type', bbox_to_anchor=(1.05, .5), loc='center left',fontsize=16)
+        # Display the plot in Streamlit
+        st.pyplot(plt)
 
-    # Display the plot in Streamlit
-    st.pyplot(plt)
-
-plot_sns_rate_occurrence(historical_rate_occurrence)
+    # Plot the data
+    plot_sns_rate_occurrence(historical_rate_occurrence)
+else:
+    st.error("No valid data available for the selected player and years.")

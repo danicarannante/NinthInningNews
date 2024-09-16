@@ -119,7 +119,6 @@ pitch_type_mapping = {
 
 @st.cache_data
 def create_summary_table(data):
-    # Calculate total number of hits for rate calculation
     total_hits = len(data)
     # Get all unique combinations of (bb_type, hit_classification)
     unique_combinations = data['hit_classification'].unique()
@@ -133,8 +132,7 @@ def create_summary_table(data):
         avg_wOBA = filtered_df['woba_value'].mean()
         avg_diff = avg_wOBA - avg_xWOBA
         avg_HH = len(filtered_df[filtered_df['launch_speed'] >= 95]) / total_hits # exit velocity >= 95 mph
-
-        
+ 
         # Append the calculated values as a row
         if htype is not None:
             rows.append({
@@ -146,9 +144,7 @@ def create_summary_table(data):
                 'avg_HH%': avg_HH
             })
 
-    # Create a new DataFrame from the rows
     result_df = pd.DataFrame(rows)
-    # Display the result DataFrame
     return (result_df)
 
 
@@ -170,20 +166,7 @@ def classify_hit(row):
                 location = 'opposite'
         return f"{location} {row['bb_type']}"
 
-@st.cache_data
+@st.cache_data(show_spinner=True)
 def get_league_data():
     stats = statcast(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31").get(['player_name','hit_location','launch_angle','launch_speed','bb_type','stand','events','woba_value','estimated_woba_using_speedangle','woba_denom'])
     return stats
-
-def get_comparison(df1,df2):
-    orginal = df1.copy().round(2).astype(str).applymap(lambda x: x.rstrip('0').rstrip('.'))
-    df1 = df1.apply(pd.to_numeric, errors='coerce')
-    df2 = df2.apply(pd.to_numeric, errors='coerce')
-    threshold = 0.005
-    comparison = (df1 - df2)
-    comparison = comparison.dropna()
-    # green: within threshold value, yellow: greater than league value, pink: less than league value
-    colors = comparison.applymap(lambda x: 'background-color: LightYellow' if x <= threshold and x >= -threshold else ('background-color: LightGreen' if x > threshold else 'background-color: Pink'))
-    styled_df1 = orginal.style.apply(lambda _: colors, axis=None)
-
-    return styled_df1
