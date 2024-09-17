@@ -72,10 +72,9 @@ cache.enable()
 if 'league_data' not in st.session_state or st.session_state['data'] is False:
     with st.sidebar.status('Loading Data...'):
         print(f"loading league data for {st.session_state['year']}")
-        if st.session_state['year'] in [2023,2024]:
-            st.session_state['league_data'] = pd.read_parquet(f'statcast_{st.session_state["year"]}.parquet')
-        else:
-            st.session_state['league_data'] = get_league_data()
+        # if st.session_state['year'] in [2023,2024]:
+        #     st.session_state['league_data'] = pd.read_parquet(f'statcast_{st.session_state["year"]}.parquet')
+        st.session_state['league_data'] = get_league_data()
         st.session_state['data'] = True
         print('finished....')
     st.sidebar.success("Data Loaded Successfully")
