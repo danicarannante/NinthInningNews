@@ -64,7 +64,7 @@ split = TimeSeriesSplit(n_splits=3)
 
 sfs = SequentialFeatureSelector(rr, n_features_to_select=20, direction="forward", cv=split, n_jobs=4)
 # standardize the data by scaling all values to a range of 0 to 1. In our process, we selectively exclude certain columns that need to maintain their original scale and only apply this scaling to the remaining columns.
-removed_columns = ["Next_WAR", "Name", "IDfg", "Season", "GS"]
+removed_columns = ["Next_WAR", "Name", "IDfg", "Season"]
 selected_columns = pitching.columns[~pitching.columns.isin(removed_columns)]
 
 scaler = MinMaxScaler()
@@ -128,8 +128,8 @@ st.pyplot(plt)
 obv = f"""
 <div style='border-radius: 5px; text-align: center; width: auto;'>
     <h1 style='font-size: 25px;'>Coefficient Analysis</h1>
-    <p style='font-size: 20px;'>Positive values suggest that these coefficients are positively related to the Next_WAR</p> 
-    <p style='font-size: 20px;'>A higher SO (Strikeouts) indicates a greater WAR with the opposite being true for a feature like Age, suggesting that WAR decreases as players get older</p> 
+    <p style='font-size: 20px;margin:0;'>Positive values suggest that these coefficients are positively related to the Next_WAR</p> 
+    <p style='font-size: 20px;margin:0;'>A higher SO (Strikeouts) indicates a greater WAR with the opposite being true for a feature like Age, suggesting that WAR decreases as players get older</p> 
 </div>
 """
 st.markdown(obv, unsafe_allow_html=True)
@@ -147,7 +147,6 @@ coefs_df = pd.DataFrame({
 })
 
 coefs_df = coefs_df.reindex(coefs_df.Coefficient.abs().sort_values(ascending=False).index)
-
 plt.figure(figsize=(10, 8))
 sns.barplot(x='Coefficient', y='Feature', data=coefs_df)
 plt.title('Coefficient Plot of Ridge Regression Model')
@@ -166,4 +165,16 @@ vif = pd.DataFrame()
 vif["variables"] = X.columns
 vif["VIF"] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
 
-# want to keey the values below 8 - GS seems to be a problem so we add it to our remove columns from above
+col1,col2 = st.columns(2)
+notes = f"""
+<div style='border-radius: 5px; text-align: center; width: auto;'>
+    <p style='font-size: 20px;'>Variable Inflation Factor</p> 
+    <p style='font-size: 20px; margin:0'>Highly correlated (collinear) features could end up masking the individual impacts of the variables involved </p> 
+    <p style='font-size: 20px; margin:0'>Example we have GS at 17.2 and in the bar graph it would mask shO (Shutouts), so one solution would be to remove the stat from the dataset </p> 
+
+</div>
+"""
+col1.markdown(notes, unsafe_allow_html=True)
+col2.dataframe(vif)
+
+# want to key the values below 8 - GS seems to be a problem so we add it to our remove columns from above

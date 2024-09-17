@@ -15,13 +15,17 @@ selected_team = st.sidebar.selectbox('Select a team:', st.session_state["teams"]
 abv = team_mapping[selected_team]
 
 bs = batting_stats(st.session_state['year'], end_season=st.session_state['year'], league='all', qual=1, ind=1)
-filtered = bs[bs["Team" ] == abv]
+filtered = bs[(bs["Team" ] == abv) & (bs["G"] > 20)]
 players = sorted([name for name in filtered['Name']])
 selected_player = st.sidebar.selectbox('Select a player:', players)
 player_info = filtered[filtered['Name'] == selected_player].get(['Age','G','AB','PA','H','1B','2B','3B','HR','R','RBI','BB','HBP','SF','SH','wRC+','wOBA',])
-print(selected_player)
 
-player_lookup = playerid_lookup(selected_player.split(" ")[1],selected_player.split(" ")[0],fuzzy=True) # contains id to use in baseball reference
+player_split = selected_player.split(" ")
+if len(player_split) == 3:
+    player_lookup = playerid_lookup(f"{player_split[1]} {player_split[2]}",player_split[0],fuzzy=True) # contains id to use in baseball reference
+else:
+    player_lookup = playerid_lookup(player_split[1],player_split[0],fuzzy=True)
+
 player_api_id = player_lookup['key_mlbam'].values[0]
 player_fangraphs_id = player_lookup['key_fangraphs'].values[0]
 img_url = f"https://securea.mlb.com/mlb/images/players/head_shot/{player_api_id}.jpg"
@@ -29,7 +33,7 @@ debut_date = int(player_lookup['mlb_played_first'].values[0])
 
 # ------------------------- Player Info Section ------------------------------------
 info = f"""
-<div style='background-color: LightBlue; border-radius: 5px; padding: 10px; margin-bottom: 5px;display: flex; align-items: center;'>
+<div style=' border-radius: 5px; padding: 10px; margin-bottom: 5px;display: flex; align-items: center;'>
     <img src='{img_url}' style='width: 100px; margin-right: 15px; border-radius: 5px;'>
     <div style='flex-grow: 1; text-align: center; display: flex; flex-direction: column; justify-content: center;'>
         <h1 style='text-align: center; font-size: 35px;'>{selected_player}</h1> 
@@ -94,8 +98,8 @@ heatmap_header = f"""
 st.markdown(heatmap_header, unsafe_allow_html=True)
 all_data = data.get(['pfx_x','pfx_z','launch_speed','launch_angle','pitch_name','p_throws', 'release_speed', 'release_spin_rate','plate_x', 'plate_z', 'player_name', 'game_year', 'description', 'bb_type'])
 
-all_data['pfx_x_in_pv'] = -12 * all_data['pfx_x']
-all_data['pfx_z_in'] = 12 * all_data['pfx_z']
+all_data['pfx_x_in_pv'] = -12 * all_data['pfx_x'] # horizatanl movement
+all_data['pfx_z_in'] = 12 * all_data['pfx_z'] # vertical movement
 
 # Create 'barrel' column based on conditions
 all_data['barrel'] = np.where(
@@ -105,6 +109,7 @@ all_data['barrel'] = np.where(
     (all_data['launch_angle'] > 4) & (all_data['launch_angle'] < 50),
     1, 0
 )
+
 
 # Create 'pitch_type' column based on 'pitch_name'
 all_data['pitch_type'] = all_data['pitch_name'].apply(lambda x: 
@@ -216,7 +221,6 @@ def get_historical_rate_occurrence(years, player_id):
         except Exception as e:
             print(f"Error processing data for year {year}: {e}")
     
-   
     if historical_data:
         return pd.concat(historical_data)
     else:

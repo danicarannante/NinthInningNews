@@ -17,13 +17,19 @@ selected_team = st.sidebar.selectbox('Select a team:', st.session_state["teams"]
 abv = team_mapping[selected_team]
 
 ps = pitching_stats(st.session_state['year'], end_season=st.session_state['year'], league='all', qual=1, ind=1)
-filtered = ps[ps["Team" ] == abv]
+filtered = ps[(ps["Team" ] == abv) & (ps["G"] > 20)]
 players = sorted([name for name in filtered['Name']])
 selected_player = st.sidebar.selectbox('Select a pitcher:', players)
 player_info = filtered[filtered['Name'] == selected_player].get(['Age','W','L','G','GS','IP','WHIP','WAR','ERA','SV','FIP','xFIP','BB','SO','TTO%'])
 print(selected_player)
 
-player_lookup = playerid_lookup(selected_player.split(" ")[1],selected_player.split(" ")[0],fuzzy=True) # contains id to use in baseball reference
+player_split = selected_player.split(" ")
+if len(player_split) == 3:
+    player_lookup = playerid_lookup(f"{player_split[1]} {player_split[2]}",player_split[0],fuzzy=True) # contains id to use in baseball reference
+else:
+    player_lookup = playerid_lookup(player_split[1],player_split[0],fuzzy=True)
+
+
 player_api_id = player_lookup['key_mlbam'].values[0]
 player_fangraphs_id = player_lookup['key_fangraphs'].values[0]
 debut_date = int(player_lookup['mlb_played_first'].values[0])
@@ -31,7 +37,7 @@ img_url = f"https://securea.mlb.com/mlb/images/players/head_shot/{player_api_id}
 
 # ------------------------- Player Info Section ------------------------------------
 info = f"""
-<div style='background-color: LightBlue; border-radius: 5px; padding: 10px; margin-bottom: 5px;display: flex; align-items: center;'>
+<div style='border-radius: 5px; padding: 10px; margin-bottom: 5px;display: flex; align-items: center;'>
     <img src='{img_url}' style='width: 100px; margin-right: 15px; border-radius: 5px;'>
     <div style='flex-grow: 1; text-align: center; display: flex; flex-direction: column; justify-content: center;'>
         <h1 style='text-align: center; font-size: 35px;'>{selected_player}</h1> 
