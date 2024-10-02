@@ -26,8 +26,8 @@ END = 2023
 # load data / data cleaning
 cache.enable()
 with st.spinner("Loading model..."):
-    #pitching = pitching_stats(START, END, qual=50) # at least 50 innings
-    pitching = pd.read_parquet(f'pitching_stats.parquet')
+    pitching = pitching_stats(START, END, qual=50) # at least 50 innings
+    #pitching = pd.read_parquet(f'pitching_stats.parquet')
     pitching = pitching[pitching['Season'] != 2020]
 pitching = pitching.groupby("IDfg", group_keys=False).filter(lambda x: x.shape[0] > 1)
 
