@@ -26,7 +26,8 @@ END = 2023
 # load data / data cleaning
 cache.enable()
 with st.spinner("Loading model..."):
-    pitching = pitching_stats(START, END, qual=50) # at least 50 innings
+    #pitching = pitching_stats(START, END, qual=50) # at least 50 innings
+    pitching = pd.read_parquet(f'pitching_stats.parquet')
     pitching = pitching[pitching['Season'] != 2020]
 pitching = pitching.groupby("IDfg", group_keys=False).filter(lambda x: x.shape[0] > 1)
 
@@ -170,7 +171,7 @@ notes = f"""
 <div style='border-radius: 5px; text-align: center; width: auto;'>
     <p style='font-size: 20px;'>Variable Inflation Factor</p> 
     <p style='font-size: 20px; margin:0'>Highly correlated (collinear) features could end up masking the individual impacts of the variables involved </p> 
-    <p style='font-size: 20px; margin:0'>Example we have GS at 17.2 and in the bar graph it would mask shO (Shutouts), so one solution would be to remove the stat from the dataset </p> 
+    <p style='font-size: 20px; margin:0'>Example we have GS at 17.5 and in the bar graph it would mask shO (Shutouts), so one solution would be to remove the stat from the dataset </p> 
 
 </div>
 """

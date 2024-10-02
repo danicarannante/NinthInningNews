@@ -31,7 +31,7 @@ player_fangraphs_id = player_lookup['key_fangraphs'].values[0]
 img_url = f"https://securea.mlb.com/mlb/images/players/head_shot/{player_api_id}.jpg"
 debut_date = int(player_lookup['mlb_played_first'].values[0])
 
-# ------------------------- Player Info Section ------------------------------------
+# ------------------------- Player Info Section -----------------------------------
 info = f"""
 <div style=' border-radius: 5px; padding: 10px; margin-bottom: 5px;display: flex; align-items: center;'>
     <img src='{img_url}' style='width: 100px; margin-right: 15px; border-radius: 5px;'>
@@ -43,7 +43,7 @@ info = f"""
 """
 st.markdown(info, unsafe_allow_html=True)
 
-# -------------------------- Player Stats Blocks--------------------------------------------
+# -------------------------- Player Stats Blocks -----------------------------------
 short_df = player_info.get(['G','AB','PA','H','1B','2B','3B','HR','R','RBI','BB','HBP','SF','SH'])
 st.dataframe(short_df,hide_index=True)
 
@@ -66,7 +66,7 @@ with col1:
 with col2:
     st.markdown(season_xwOBA, unsafe_allow_html=True)
 
-# ------------------------------ Statcast Batter Data ------------------------
+# ------------------------------ Statcast Batter Data -----------------------
 pid = player_lookup['key_mlbam'].values[0]
 data = statcast_batter(f"{st.session_state['year']}-01-01",f"{st.session_state['year']}-12-31",player_id=pid)
 data = data[data['game_type'] == 'R']
@@ -96,34 +96,39 @@ heatmap_header = f"""
     </div>
     """
 st.markdown(heatmap_header, unsafe_allow_html=True)
-all_data = data.get(['pfx_x','pfx_z','launch_speed','launch_angle','pitch_name','p_throws', 'release_speed', 'release_spin_rate','plate_x', 'plate_z', 'player_name', 'game_year', 'description', 'bb_type'])
+heatmap_data = data.get(['events','pfx_x','pfx_z','launch_speed','launch_angle','pitch_name','p_throws', 'release_speed', 'release_spin_rate','plate_x', 'plate_z', 'player_name', 'game_year', 'description', 'bb_type'])
 
-all_data['pfx_x_in_pv'] = -12 * all_data['pfx_x'] # horizatanl movement
-all_data['pfx_z_in'] = 12 * all_data['pfx_z'] # vertical movement
+heatmap_data['pfx_x_in_pv'] = -12 * heatmap_data['pfx_x'] # horizantal movement
+heatmap_data['pfx_z_in'] = 12 * heatmap_data['pfx_z'] # vertical movement
 
 # Create 'barrel' column based on conditions
-all_data['barrel'] = np.where(
-    (all_data['launch_speed'] * 1.5 - all_data['launch_angle'] >= 117) &
-    (all_data['launch_speed'] + all_data['launch_angle'] >= 124) &
-    (all_data['launch_speed'] >= 97) &
-    (all_data['launch_angle'] > 4) & (all_data['launch_angle'] < 50),
-    1, 0
-)
+def is_barrel(row):
+    exit_vel = row['launch_speed']
+    launch_angle = row['launch_angle']
+    
+    if exit_vel >= 98:
+        # Adjust launch angle range based on exit velocity
+        if 98 <= exit_vel <= 99 and 26 <= launch_angle <= 30:
+            return True
+        elif 99 <= exit_vel <= 100 and 25 <= launch_angle <= 31:
+            return True
+        elif exit_vel > 100 and 24 <= launch_angle <= 33:
+            return True
+    return False
+
+# Apply the function to the DataFrame
+heatmap_data['barrel'] = heatmap_data.apply(is_barrel, axis=1)
 
 
 # Create 'pitch_type' column based on 'pitch_name'
-all_data['pitch_type'] = all_data['pitch_name'].apply(lambda x: 
+heatmap_data['pitch_type'] = heatmap_data['pitch_name'].apply(lambda x: 
     "Breaking Ball" if x in ["Slider", "Curveball", "Knuckle Curve", "Slurve", "Sweeper", "Slow Curve"] else
     "Fastball" if x in ["4-Seam Fastball", "Sinker", "Cutter"] else
     "Offspeed" if x in ["Changeup", "Split-Finger", "Other", "Knuckleball", "Eephus"] else
     "Unknown"
 )
 
-# Select the required columns
-heatmap_data = all_data[
-    ['pitch_name', 'p_throws', 'release_speed', 'pfx_x_in_pv', 'pfx_z_in', 'release_spin_rate', 
-     'plate_x', 'plate_z', 'player_name', 'game_year', 'description', 'bb_type', 'barrel']
-].dropna()
+
 
 # Function to filter data for each heat map stat-type
 def find_plots(data, column, value):
@@ -163,31 +168,40 @@ col1.pyplot(create_plot(l_filtered,'L'))
 col2.pyplot(create_plot(r_filtered, 'R'))
 
 # -------------------------------- Table -----------------------------------------
-# Group the data by pitch type and calculate summary statistics
-all_data['is_swing'] = all_data['description'].isin(['swinging_strike', 'foul', 'hit_into_play'])
-all_data['is_whiff'] = all_data['description'] == 'swinging_strike'
+valid_at_bat_events = [
+    'single', 'double', 'triple', 'home_run', 'strikeout', 
+    'field_out', 'force_out', 'grounded_into_double_play', 
+    'fielders_choice', 'field_error'
+]
 
-summary_stats = all_data.groupby('pitch_name').agg(
+summary_stats = heatmap_data.groupby('pitch_name').agg( 
     Pitch_Count=('pitch_name', 'size'),
-    Miss_Rate=('description', lambda x: (x == 'swinging_strike').mean()),
-    Barrel_Rate=('barrel', 'mean'),
+    At_Bats=('events', lambda x: x[x.isin(valid_at_bat_events)].count()),
     Avg_Exit_Velocity=('launch_speed', 'mean'),
     Avg_Launch_Angle=('launch_angle', 'mean'),
-    Whiff_Rate=('is_whiff', lambda x: x.sum() / all_data.loc[x.index, 'is_swing'].sum()),
-    Batting_Average=('description', lambda x: (x == 'hit_into_play').mean()),
+    Barrel_Count=('barrel', lambda x: x[x == True].count()),
+    Miss_Swings=('description', lambda x: x[x == 'swinging_strike'].count()),
+    Swing_Count = ('description', lambda x: x[x.isin(['swinging_strike', 'foul', 'hit_into_play'])].count()),
+    Hits=('events', lambda x: x[x.isin(['single', 'double', 'triple', 'home_run'])].count())
 ).reset_index()
 
+summary_stats['Batting_Average'] = summary_stats['Hits'] / summary_stats['At_Bats']
+summary_stats['Whiff_Rate'] = summary_stats['Miss_Swings'] / summary_stats['Swing_Count']
+summary_stats['Batting_Average'] = summary_stats['Hits'] / summary_stats['At_Bats']
+summary_stats['Barrel_Rate'] = summary_stats['Barrel_Count'] / summary_stats['Hits']
+ 
 summary_stats = summary_stats.rename(columns={
     'Pitch_Count': 'pitch count',
     'Miss_Rate': 'miss rate',
     'Barrel_Rate': 'barrel rate',
-    'Avg_Exit_Velocity': 'average exit velocity',
-    'Avg_Launch_Angle': 'average launch angle',
+    'Avg_Exit_Velocity': 'avgerage exit velocity',
+    'Avg_Launch_Angle': 'avgerage launch angle',
     'Whiff_Rate': 'whiff rate',
-    'Batting_Average': 'batting averge'
+    'Batting_Average': 'batting average',
+    'Hits':'hits'
 })
 
-st.dataframe(summary_stats[summary_stats['pitch_name'] == pitch_type_filter].drop("pitch_name",axis=1),hide_index=True)
+st.dataframe(summary_stats[summary_stats['pitch_name'] == pitch_type_filter].drop(columns=["pitch_name","At_Bats","Barrel_Count","Miss_Swings","Swing_Count"],axis=1),hide_index=True)
 
 # -------------------------------- Bar Chart -------------------------------------
 rate_header = """
